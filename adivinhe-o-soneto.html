@@ -1,0 +1,3372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adivinhe o Soneto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1c130d;
+    --bg-2: #2c1f16;
+    --card: #ecdfc0;
+    --card-alt: #e3d3ab;
+    --ink: #2b1a10;
+    --ink-soft: #6b4f34;
+    --gilt: #b8863c;
+    --gilt-dark: #93692c;
+    --oxblood: #7a2a20;
+    --sage: #6f8a5c;
+    --muted: #a3907a;
+    --cream: #f2e8d0;
+    --line: rgba(184,134,60,0.16);
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'EB Garamond', Georgia, serif;
+    --font-mono: 'Special Elite', 'Courier New', monospace;
+    --radius: 3px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 900px 600px at 50% -10%, #4a3420 0%, transparent 60%),
+      radial-gradient(ellipse 1200px 900px at 50% 110%, #100a05 0%, transparent 55%),
+      var(--bg);
+    font-family: var(--font-body);
+    color: var(--muted);
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px 64px;
+  }
+
+  .board {
+    width: 100%;
+    max-width: 720px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 28px;
+    gap: 16px;
+    animation: riseIn 0.5s ease both;
+  }
+
+  .title-block h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(30px, 5vw, 42px);
+    color: var(--cream);
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+    text-shadow: 0 2px 6px rgba(10,6,3,0.4);
+  }
+
+  .title-block p {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .seal {
+    flex-shrink: 0;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--gilt), var(--gilt-dark));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(15,8,4,0.5), inset 0 0 0 2px rgba(255,245,222,0.22);
+    border: 2px solid #7c5a28;
+  }
+
+  .seal .num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 23px;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .seal .lbl {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.09em;
+    color: #3d2c10;
+    margin-top: 2px;
+  }
+
+  .case-file {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 14px 34px rgba(8,4,2,0.4);
+    animation: riseIn 0.6s ease both 0.05s;
+  }
+
+  .round-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px 14px;
+    margin-bottom: 20px;
+  }
+
+  .round-tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--gilt);
+    text-transform: uppercase;
+  }
+
+  .attempts-tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  .attempts-tag span {
+    color: var(--gilt);
+  }
+
+  .timer-tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--sage);
+    transition: color 0.2s;
+  }
+
+  .timer-tag.low {
+    color: var(--oxblood);
+    animation: timerPulse 1s ease-in-out infinite;
+  }
+
+  @keyframes timerPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 8px 2px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+
+  .evidence-card {
+    position: relative;
+    background-color: var(--card);
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(107,79,52,0.14) 0%, transparent 38%),
+      radial-gradient(circle at 88% 82%, rgba(107,79,52,0.12) 0%, transparent 34%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    background-blend-mode: multiply;
+    background-size: auto, auto, 130px 130px;
+    color: var(--ink);
+    border-radius: var(--radius);
+    padding: 12px 12px 14px;
+    box-shadow: 0 5px 14px rgba(15,8,4,0.4);
+    overflow: visible;
+  }
+
+  .evidence-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 11px 11px 0;
+    border-color: transparent rgba(43,26,16,0.16) transparent transparent;
+    pointer-events: none;
+  }
+
+  .evidence-card.bonus { background-color: var(--card-alt); }
+
+  .evidence-card .field-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 4px;
+  }
+
+  .evidence-card .field-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+    min-height: 20px;
+    line-height: 1.25;
+  }
+
+  .evidence-card .field-value.unknown {
+    color: #a08a63;
+    font-weight: 400;
+    font-style: italic;
+  }
+
+  .badge {
+    position: absolute;
+    top: -9px;
+    right: -8px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    padding: 2px 6px;
+    border-radius: 2px;
+    transform: rotate(-9deg);
+    animation: stampIn 0.3s ease both;
+  }
+
+  .badge.stamp {
+    border: 2px solid var(--oxblood);
+    color: var(--oxblood);
+    background: rgba(236,223,192,0.7);
+  }
+
+  .badge.hint {
+    border: 1px dashed var(--ink-soft);
+    color: var(--ink-soft);
+    background: rgba(236,223,192,0.55);
+    font-style: italic;
+    text-transform: lowercase;
+  }
+
+  .badge.given {
+    border: 1px solid var(--gilt-dark);
+    color: var(--gilt-dark);
+    background: rgba(184,134,60,0.16);
+    text-transform: lowercase;
+    font-style: normal;
+    animation: fixIn 0.3s ease both;
+  }
+
+  .fragment {
+    position: relative;
+    background-color: var(--card-alt);
+    background-image:
+      radial-gradient(circle at 8% 85%, rgba(107,79,52,0.16) 0%, transparent 30%),
+      radial-gradient(circle at 92% 12%, rgba(107,79,52,0.13) 0%, transparent 32%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    background-blend-mode: multiply;
+    background-size: auto, auto, 150px 150px;
+    color: var(--ink);
+    border-radius: 2px;
+    padding: 26px 26px 22px;
+    margin-bottom: 20px;
+    transform: rotate(-0.4deg);
+    box-shadow: 0 10px 24px rgba(15,8,4,0.45);
+    clip-path: polygon(0% 0%, 100% 0%, 100% 97%, 98% 100%, 92% 97%, 85% 100%, 78% 97%, 71% 100%, 64% 97%, 57% 100%, 50% 97%, 43% 100%, 36% 97%, 29% 100%, 22% 97%, 15% 100%, 8% 97%, 2% 100%, 0% 97%);
+  }
+
+  .fragment-text {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 17px;
+    line-height: 1.85;
+    white-space: pre-line;
+  }
+
+  .fragment-text::first-letter {
+    font-family: var(--font-display);
+    font-style: normal;
+    font-weight: 700;
+    font-size: 2.5em;
+    line-height: 0.7;
+    float: left;
+    padding: 5px 7px 0 0;
+    color: var(--gilt-dark);
+    text-shadow: 1px 1px 0 rgba(255,250,235,0.35);
+  }
+
+  .guess-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    background: #140d08;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--cream);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    padding: 11px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--gilt);
+  }
+
+  input[type="text"]::placeholder { color: #6b5c48; }
+
+  button {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    padding: 11px 16px;
+    transition: transform 0.1s, filter 0.15s;
+  }
+
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  #guess-btn {
+    background: var(--gilt);
+    color: #1c1006;
+  }
+  #guess-btn:hover:not(:disabled) { filter: brightness(1.08); }
+
+  .action-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  #giveup-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+  }
+  #giveup-btn:hover:not(:disabled) { border-color: var(--oxblood); color: var(--oxblood); }
+
+  #next-btn {
+    width: 100%;
+    background: var(--sage);
+    color: #f3ecd8;
+  }
+  #next-btn:hover { filter: brightness(1.15); }
+
+  .feedback {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    min-height: 20px;
+    margin-bottom: 12px;
+    padding-left: 2px;
+  }
+  .feedback.ok { color: #8fae6c; }
+  .feedback.bad { color: #c1614a; }
+
+  footer {
+    text-align: center;
+    margin-top: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: #6b5742;
+  }
+
+  .signature {
+    text-align: center;
+    margin: 22px 0 8px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    color: var(--muted);
+    opacity: 0.8;
+  }
+
+  .signature a {
+    color: var(--gilt);
+    font-style: normal;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .signature a:hover {
+    color: var(--cream);
+  }
+
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes stampIn {
+    from { opacity: 0; transform: rotate(-9deg) scale(0.4); }
+    to { opacity: 1; transform: rotate(-9deg) scale(1); }
+  }
+
+  @keyframes fixIn {
+    from { opacity: 0; transform: rotate(0deg) scale(0.4); }
+    to { opacity: 1; transform: rotate(0deg) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 480px) {
+    .case-file { padding: 18px; }
+    header { flex-direction: row; align-items: center; }
+  }
+
+  /* ---- Start & End screens ---- */
+  .screen {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 40px 28px;
+    text-align: center;
+    box-shadow: 0 14px 34px rgba(8,4,2,0.4);
+    animation: riseIn 0.6s ease both 0.05s;
+  }
+
+  .screen .seal-lg {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--gilt), var(--gilt-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(15,8,4,0.5), inset 0 0 0 2px rgba(255,245,222,0.22);
+    border: 2px solid #7c5a28;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 34px;
+    color: var(--ink);
+  }
+
+  .screen h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(26px, 5vw, 36px);
+    color: var(--cream);
+    margin: 0 0 10px;
+  }
+
+  .screen .tagline {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--muted);
+    margin: 0 0 26px;
+  }
+
+  .screen .rules {
+    text-align: left;
+    background: rgba(12,7,3,0.28);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin: 0 0 28px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+
+  .screen .rules li { margin-bottom: 4px; }
+
+  .screen .final-score {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 6px;
+  }
+
+  .screen .final-score .value {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 54px;
+    color: var(--gilt);
+    letter-spacing: 0;
+    margin-top: 6px;
+  }
+
+  .screen .final-msg {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0 0 28px;
+  }
+
+  .screen-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #start-btn {
+    background: var(--gilt);
+    color: #1c1006;
+    padding: 14px 20px;
+    font-size: 13px;
+  }
+  #start-btn:hover { filter: brightness(1.08); }
+
+  #playagain-btn {
+    background: var(--sage);
+    color: #f3ecd8;
+    padding: 13px 20px;
+  }
+  #playagain-btn:hover { filter: brightness(1.15); }
+
+  .screen-actions .secondary-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .screen-actions .secondary-row button {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 12px 16px;
+  }
+  .screen-actions .secondary-row button:hover { border-color: var(--gilt); color: var(--gilt); }
+
+  #exit-btn:hover { border-color: var(--oxblood); color: var(--oxblood); }
+
+  /* ---- Seleção de modo ---- */
+  .mode-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 22px;
+    text-align: left;
+  }
+
+  .mode-card {
+    background-color: var(--card);
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(107,79,52,0.14) 0%, transparent 38%),
+      radial-gradient(circle at 88% 82%, rgba(107,79,52,0.12) 0%, transparent 34%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    background-blend-mode: multiply;
+    background-size: auto, auto, 130px 130px;
+    color: var(--ink);
+    border: none;
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 5px;
+    text-transform: none;
+    letter-spacing: 0;
+    box-shadow: 0 5px 14px rgba(15,8,4,0.4);
+    transition: transform 0.1s, filter 0.15s;
+  }
+  .mode-card:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .mode-card:active { transform: scale(0.98); }
+
+  .mode-card-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 19px;
+    color: var(--ink);
+  }
+
+  .mode-card-desc {
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  /* ---- Arquivo ---- */
+  .screen.wide { max-width: 100%; text-align: left; }
+
+  .tutorial-mockup {
+    pointer-events: none;
+    margin: 4px 0 6px;
+  }
+  .tutorial-mockup .mode-card,
+  .tutorial-mockup .arquivo-card,
+  .tutorial-mockup .evidence-card {
+    cursor: default;
+  }
+
+  .arquivo-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 10px 16px;
+    margin-bottom: 20px;
+  }
+
+  .arquivo-header h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(24px, 4.5vw, 32px);
+    color: var(--cream);
+    margin: 0 0 4px;
+  }
+
+  .arquivo-progress {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--gilt);
+    background: rgba(184,134,60,0.1);
+    border: 1px solid var(--line);
+    padding: 5px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .arquivo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+    margin-bottom: 22px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .arquivo-card {
+    position: relative;
+    background-color: var(--card);
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(107,79,52,0.14) 0%, transparent 38%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    background-blend-mode: multiply;
+    background-size: auto, 130px 130px;
+    color: var(--ink);
+    border: none;
+    text-align: left;
+    border-radius: var(--radius);
+    padding: 12px 12px 13px;
+    cursor: pointer;
+    box-shadow: 0 5px 14px rgba(15,8,4,0.4);
+    transition: transform 0.1s, filter 0.15s;
+  }
+  .arquivo-card:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .arquivo-card:active { transform: scale(0.98); }
+
+  .arquivo-card.locked {
+    background-color: var(--bg-2);
+    background-image: none;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+
+  .arquivo-card-status {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .arquivo-card.locked .arquivo-card-status { color: var(--muted); }
+  .arquivo-card.partial .arquivo-card-status { color: var(--gilt-dark); }
+  .arquivo-card.complete .arquivo-card-status { color: var(--sage); }
+
+  .arquivo-card-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.3;
+    margin-bottom: 3px;
+  }
+
+  .arquivo-card-sub {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .arquivo-card.locked .arquivo-card-sub { color: var(--muted); }
+
+  #arquivo-detail-body {
+    background-color: var(--card);
+    background-image:
+      radial-gradient(circle at 8% 85%, rgba(107,79,52,0.16) 0%, transparent 30%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    background-blend-mode: multiply;
+    background-size: auto, 150px 150px;
+    color: var(--ink);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    box-shadow: 0 10px 24px rgba(15,8,4,0.45);
+  }
+
+  .detail-title-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(43,26,16,0.14);
+  }
+
+  .detail-avatar {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--gilt), var(--gilt-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--ink);
+    border: 2px solid #7c5a28;
+  }
+
+  .detail-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--ink);
+    margin: 0 0 2px;
+  }
+
+  .detail-meta {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+
+  .detail-section-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 6px;
+  }
+
+  .style-box {
+    background: rgba(43,26,16,0.06);
+    border-left: 3px solid var(--gilt-dark);
+    border-radius: 2px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+
+  .style-box p {
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .style-box.locked {
+    border-left-color: var(--ink-soft);
+  }
+  .style-box.locked p {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .detail-sonnet-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .detail-sonnet-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    padding: 7px 2px;
+    border-bottom: 1px solid rgba(43,26,16,0.08);
+  }
+
+  .detail-sonnet-row .status-icon {
+    display: inline-block;
+    width: 16px;
+    text-align: center;
+    margin-right: 6px;
+    font-family: var(--font-mono);
+  }
+
+  .detail-sonnet-row.locked-row { color: var(--muted); font-style: italic; }
+  .detail-sonnet-row.partial-row .status-icon { color: var(--gilt-dark); }
+  .detail-sonnet-row.complete-row .status-icon { color: #4a6b3a; }
+
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px 14px;
+    margin-bottom: 18px;
+  }
+
+  .mode-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: rgba(184,134,60,0.1);
+    border: 1px solid var(--line);
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+
+  .quit-link {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 4px 2px;
+    cursor: pointer;
+  }
+  .quit-link:hover { color: var(--oxblood); }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="board">
+
+  <!-- ---- TELA INICIAL ---- -->
+  <div class="screen" id="view-start">
+    <div class="seal-lg">?</div>
+    <h1>Adivinhe o Soneto</h1>
+    <p class="tagline">um caso de detetive literário</p>
+    <ul class="rules">
+      <li>Cada rodada apresenta um fragmento de um soneto de domínio público.</li>
+      <li>Descubra autor, país e século (provas principais) — título e corrente literária valem pontos bônus.</li>
+      <li>Errar revela mais texto do soneto e, aos poucos, pistas extras.</li>
+      <li>Quanto mais rápido você acerta, mais pontos ganha.</li>
+    </ul>
+    <div class="screen-actions">
+      <button id="start-btn">Começar</button>
+      <div class="secondary-row">
+        <button id="arquivo-btn" style="flex:1">Consultar arquivo</button>
+        <button id="tutorial-btn" style="flex:1">Guia do detetive<br><span style="font-size:9px; opacity:0.7; text-transform:none; letter-spacing:0;">(como jogar)</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---- TELA DE ESCOLHA DE RITMO ---- -->
+  <div class="screen hidden" id="view-pace">
+    <div class="seal-lg">&#9201;</div>
+    <h1>Escolha o ritmo</h1>
+    <p class="tagline">com pressa, ou no seu tempo?</p>
+    <div class="mode-list">
+      <button class="mode-card" id="pace-casual-btn">
+        <span class="mode-card-title">Casual</span>
+        <span class="mode-card-desc">Sem cronômetro. Leia com calma, pense antes de responder — o modo de sempre.</span>
+      </button>
+      <button class="mode-card" id="pace-facil-btn">
+        <span class="mode-card-title">Desafio: Fácil</span>
+        <span class="mode-card-desc">90 segundos por soneto. Dá pra sentir a pressão sem sufoco.</span>
+      </button>
+      <button class="mode-card" id="pace-medio-btn">
+        <span class="mode-card-title">Desafio: Médio</span>
+        <span class="mode-card-desc">60 segundos por soneto. Ritmo de quem já manja do jogo.</span>
+      </button>
+      <button class="mode-card" id="pace-dificil-btn">
+        <span class="mode-card-title">Desafio: Difícil</span>
+        <span class="mode-card-desc">35 segundos por soneto. Só pra detetives rápidos.</span>
+      </button>
+    </div>
+    <div class="screen-actions">
+      <div class="secondary-row">
+        <button id="pace-back-btn" style="flex:1">Voltar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---- TELA DE SELEÇÃO DE MODO ---- -->
+  <div class="screen hidden" id="view-modes">
+    <div class="seal-lg">?</div>
+    <h1>Escolha o expediente</h1>
+    <p class="tagline">qual arquivo você vai investigar?</p>
+    <div class="mode-list">
+      <button class="mode-card" id="mode-geral-btn">
+        <span class="mode-card-title">Teste</span>
+        <span class="mode-card-desc">O jogo normal, com todo o banco de dados. 8 sonetos aleatórios de qualquer época, autor ou país.</span>
+      </button>
+      <button class="mode-card" id="mode-brasil-btn">
+        <span class="mode-card-title">Literatura Brasileira (Geral)</span>
+        <span class="mode-card-desc">8 sonetos sorteados entre todos os poetas brasileiros do arquivo, do Barroco ao Modernismo. País já vem preenchido — os pontos vão todos para autor e século.</span>
+      </button>
+      <button class="mode-card" id="mode-classicos-btn">
+        <span class="mode-card-title">Literatura Brasileira (Clássicos)</span>
+        <span class="mode-card-desc">Só os sonetos mais consagrados — os "grandes sucessos" da literatura brasileira, os mais cobrados em prova. País já vem preenchido.</span>
+      </button>
+      <button class="mode-card" id="mode-feminina-btn">
+        <span class="mode-card-title">Literatura Feminina</span>
+        <span class="mode-card-desc">Só sonetos escritos por mulheres, do Barroco ao século XX. País continua valendo a pena adivinhar — o corpus atravessa Brasil e Portugal.</span>
+      </button>
+    </div>
+    <div class="screen-actions">
+      <div class="secondary-row">
+        <button id="modes-back-btn" style="flex:1">Voltar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---- TELA DO JOGO ---- -->
+  <div id="view-game" class="hidden">
+    <header>
+      <div class="title-block">
+        <h1>Adivinhe o Soneto</h1>
+        <p>um caso de detetive literário</p>
+      </div>
+      <div class="seal">
+        <div class="num" id="score">0</div>
+        <div class="lbl">PONTOS</div>
+      </div>
+    </header>
+
+    <div class="case-file">
+      <div class="round-row">
+        <div class="round-tag">Rodada <span id="round-num">1</span> / <span id="round-total">8</span></div>
+        <div class="timer-tag hidden" id="timer-tag">&#9201; <span id="timer-value">0:00</span></div>
+        <div class="attempts-tag">Tentativas <span id="attempts-count">0</span>/<span id="attempts-max">6</span></div>
+      </div>
+
+      <div class="meta-row">
+        <div class="mode-tag" id="mode-tag">Teste</div>
+        <button id="quit-btn" class="quit-link">Encerrar partida</button>
+      </div>
+
+      <p class="section-label">Provas principais</p>
+      <div class="card-grid" id="main-targets"></div>
+
+      <p class="section-label">Pistas bônus</p>
+      <div class="card-grid" id="bonus-targets"></div>
+
+      <div class="fragment">
+        <div class="fragment-text" id="excerpt"></div>
+      </div>
+
+      <div class="guess-row">
+        <input id="guess-input" type="text" placeholder="autor, país, século, título ou corrente..." autocomplete="off">
+        <button id="guess-btn">Adivinhar</button>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="action-row">
+        <button id="giveup-btn">Revelar e pular</button>
+        <div id="next-wrap" style="display:none; flex:1;">
+          <button id="next-btn">Próxima rodada →</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>sonetos de domínio público · banco em expansão</footer>
+  </div>
+
+  <!-- ---- TELA DO ARQUIVO ---- -->
+  <div class="screen wide hidden" id="view-arquivo">
+    <div id="arquivo-grid-wrap">
+      <div class="arquivo-header">
+        <div>
+          <h1>Arquivo</h1>
+          <p class="tagline">o catálogo completo — o que você já decifrou</p>
+        </div>
+        <div class="arquivo-progress" id="arquivo-progress">0 de 0 sonetos completos</div>
+      </div>
+      <div class="arquivo-grid" id="arquivo-grid"></div>
+      <div class="screen-actions">
+        <button id="arquivo-back-btn">Voltar ao início</button>
+      </div>
+    </div>
+
+    <div id="arquivo-detail" class="hidden">
+      <button id="arquivo-detail-back-btn" class="quit-link" style="margin-bottom:14px;">&larr; voltar ao arquivo</button>
+      <div id="arquivo-detail-body"></div>
+    </div>
+  </div>
+
+  <!-- ---- TELA DO TUTORIAL ---- -->
+  <div class="screen wide hidden" id="view-tutorial">
+    <div class="arquivo-header">
+      <div>
+        <h1 id="tutorial-title">Guia do detetive</h1>
+        <p class="tagline" id="tutorial-tagline">como jogar</p>
+      </div>
+      <div class="arquivo-progress" id="tutorial-progress">1 de 6</div>
+    </div>
+    <div id="tutorial-mockup"></div>
+    <p id="tutorial-body" style="font-family: var(--font-body); font-size: 14.5px; line-height: 1.65; color: var(--muted); margin: 16px 0 22px;"></p>
+    <div class="screen-actions">
+      <button id="tutorial-next-btn">Próximo</button>
+      <div class="secondary-row">
+        <button id="tutorial-back-btn" style="flex:1">Voltar</button>
+        <button id="tutorial-skip-btn" style="flex:1">Pular</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---- TELA FINAL ---- -->
+  <div class="screen hidden" id="view-end">
+    <div id="end-content">
+      <div class="seal-lg">✓</div>
+      <h1>Caso encerrado</h1>
+      <p class="final-score">Pontuação final<span class="value" id="final-score-value">0</span></p>
+      <p class="final-msg" id="final-msg">O arquivo foi fechado.</p>
+      <div class="screen-actions">
+        <button id="playagain-btn">Jogar novamente</button>
+        <div class="secondary-row">
+          <button id="home-btn">Início</button>
+          <button id="exit-btn">Sair</button>
+        </div>
+      </div>
+    </div>
+    <div id="exit-content" class="hidden">
+      <div class="seal-lg">&#9830;</div>
+      <h1>Até a próxima</h1>
+      <p class="tagline">Obrigado por investigar conosco.</p>
+      <p class="final-msg">Pode fechar esta aba com segurança — ou reabrir o caso quando quiser.</p>
+      <div class="screen-actions">
+        <button id="reopen-btn">Reabrir caso</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="signature">feito por <a href="https://www.instagram.com/johnny_knck/" target="_blank" rel="noopener">JVK</a> com Claude Code</p>
+
+</div>
+
+<script>
+const sonnets = [
+  {
+    id: "luis-de-camoes--amor-e-fogo-que-arde-sem-se-ver",
+    titulo: "Amor é fogo que arde sem se ver",
+    autor: "Luís de Camões",
+    pais: "Portugal",
+    seculo: "XVI",
+    corrente: "Classicismo",
+    aliases: {
+      titulo: ["amor e fogo que arde sem se ver", "amor e fogo"],
+      autor: ["luis de camoes", "camoes", "luis vaz de camoes"],
+      pais: ["portugal", "portugues", "portuguesa"],
+      seculo: ["xvi", "16", "dezesseis", "quinhentos"],
+      corrente: ["classicismo", "quinhentismo", "renascimento", "renascentismo"]
+    },
+    linha1: "Amor é fogo que arde sem se ver,",
+    quarteto: "Amor é fogo que arde sem se ver,\nÉ ferida que dói e não se sente;\nÉ um contentamento descontente,\nÉ dor que desatina sem doer.",
+    completo: "Amor é fogo que arde sem se ver,\nÉ ferida que dói e não se sente;\nÉ um contentamento descontente,\nÉ dor que desatina sem doer.\n\nÉ um não querer mais que bem querer;\nÉ um andar solitário entre a gente;\nÉ nunca contentar-se de contente;\nÉ um cuidar que ganha em se perder.\n\nÉ querer estar preso por vontade;\nÉ servir a quem vence, o vencedor;\nÉ ter com quem nos mata, lealdade.\n\nMas como causar pode seu favor\nNos corações humanos amizade,\nSe tão contrário a si é o mesmo Amor?"
+  },
+  {
+    id: "antero-de-quental--ideal",
+    titulo: "Ideal",
+    autor: "Antero de Quental",
+    pais: "Portugal",
+    seculo: "XIX",
+    corrente: "Realismo (Geração de 70)",
+    aliases: {
+      titulo: ["ideal"],
+      autor: ["antero de quental", "antero quental", "quental"],
+      pais: ["portugal", "portugues", "portuguesa"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["realismo", "geracao de 70", "geracao de setenta"]
+    },
+    linha1: "Aquela que eu adoro não é feita",
+    quarteto: "Aquela que eu adoro não é feita\nDe lírios nem de rosas purpurinas,\nNão tem as formas lânguidas, divinas,\nDa antiga Vênus de cintura estreita.",
+    completo: "Aquela que eu adoro não é feita\nDe lírios nem de rosas purpurinas,\nNão tem as formas lânguidas, divinas,\nDa antiga Vênus de cintura estreita.\n\nNão é a Circe, cuja mão suspeita\nCompõe filtros mortais entre ruínas,\nNem a Amazona, que se agarra às crinas\nDum corcel e combate satisfeita.\n\nA mim mesmo pergunto, e não atino\nCom o nome que dê a essa visão\nQue ora amostra ora esconde o meu destino.\n\nÉ como uma miragem que entrevejo\nIdeal, que nasceu na solidão,\nNuvem, sonho impalpável do Desejo..."
+  },
+  {
+    id: "olavo-bilac--via-lactea-ora-direis-ouvir-estrelas",
+    titulo: "Via Láctea (Ora direis ouvir estrelas)",
+    autor: "Olavo Bilac",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    classico: true,
+    aliases: {
+      titulo: ["via lactea", "ora direis ouvir estrelas", "ouvir estrelas", "via lactea ora direis ouvir estrelas"],
+      autor: ["olavo bilac", "bilac"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "parnasiano"]
+    },
+    linha1: '"Ora (direis) ouvir estrelas! Certo',
+    quarteto: '"Ora (direis) ouvir estrelas! Certo\nPerdeste o senso!" E eu vos direi, no entanto,\nQue, para ouvi-las, muita vez desperto\nE abro as janelas, pálido de espanto...',
+    completo: '"Ora (direis) ouvir estrelas! Certo\nPerdeste o senso!" E eu vos direi, no entanto,\nQue, para ouvi-las, muita vez desperto\nE abro as janelas, pálido de espanto...\n\nE conversamos toda a noite, enquanto\nA via-láctea, como um pálio aberto,\nCintila. E, ao vir do sol, saudoso e em pranto,\nInda as procuro pelo céu deserto.\n\nDireis agora: "Tresloucado amigo!\nQue conversas com elas? Que sentido\nTem o que dizem, quando estão contigo?"\n\nE eu vos direi: "Amai para entendê-las!\nPois só quem ama pode ter ouvido\nCapaz de ouvir e de entender estrelas."'
+  },
+  {
+    id: "william-shakespeare--sonnet-18-shall-i-compare-thee-to-a-summer-s-day",
+    titulo: "Sonnet 18 (Shall I compare thee to a summer's day?)",
+    autor: "William Shakespeare",
+    pais: "Inglaterra",
+    seculo: "XVI",
+    corrente: "Renascimento",
+    aliases: {
+      titulo: ["sonnet 18", "shall i compare thee", "soneto 18", "sonnet 18 shall i compare thee to a summers day"],
+      autor: ["william shakespeare", "shakespeare"],
+      pais: ["inglaterra", "ingles", "inglesa", "reino unido"],
+      seculo: ["xvi", "xvii", "16", "17"],
+      corrente: ["renascimento", "renascentismo", "elisabetano", "renascentista"]
+    },
+    linha1: "Shall I compare thee to a summer's day?",
+    quarteto: "Shall I compare thee to a summer's day?\nThou art more lovely and more temperate:\nRough winds do shake the darling buds of May,\nAnd summer's lease hath all too short a date;",
+    completo: "Shall I compare thee to a summer's day?\nThou art more lovely and more temperate:\nRough winds do shake the darling buds of May,\nAnd summer's lease hath all too short a date;\n\nSometime too hot the eye of heaven shines,\nAnd often is his gold complexion dimm'd;\nAnd every fair from fair sometime declines,\nBy chance, or nature's changing course, untrimm'd;\n\nBut thy eternal summer shall not fade,\nNor lose possession of that fair thou ow'st,\nNor shall death brag thou wander'st in his shade,\nWhen in eternal lines to time thou grow'st:\n\nSo long as men can breathe, or eyes can see,\nSo long lives this, and this gives life to thee."
+  },
+  {
+    id: "gregorio-de-matos--triste-bahia",
+    titulo: "Triste Bahia",
+    autor: "Gregório de Matos",
+    pais: "Brasil",
+    seculo: "XVII",
+    corrente: "Barroco",
+    classico: true,
+    aliases: {
+      titulo: ["triste bahia"],
+      autor: ["gregorio de matos", "gregorio de matos guerra", "boca do inferno"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xvii", "17", "dezessete"],
+      corrente: ["barroco"]
+    },
+    linha1: "Triste Bahia! Ó quão dessemelhante",
+    quarteto: "Triste Bahia! Ó quão dessemelhante\nEstás e estou do nosso antigo estado!\nPobre te vejo a ti, tu a mi empenhado,\nRica te vi eu já, tu a mi abundante.",
+    completo: "Triste Bahia! Ó quão dessemelhante\nEstás e estou do nosso antigo estado!\nPobre te vejo a ti, tu a mi empenhado,\nRica te vi eu já, tu a mi abundante.\n\nA ti trocou-te a máquina mercante,\nQue em tua larga barra tem entrado,\nA mim foi-me trocando, e tem trocado,\nTanto negócio e tanto negociante.\n\nDeste em dar tanto açúcar excelente\nPelas drogas inúteis, que abelhuda\nSimples aceitas do sagaz Brichote.\n\nOh se quisera Deus, que de repente\nUm dia amanheceras tão sisuda\nQue fora de algodão o teu capote!"
+  },
+  {
+    id: "tomas-antonio-gonzaga--lidora",
+    titulo: "Lidora",
+    autor: "Tomás Antônio Gonzaga",
+    pais: "Brasil",
+    seculo: "XVIII",
+    corrente: "Arcadismo",
+    aliases: {
+      titulo: ["lidora"],
+      autor: ["tomas antonio gonzaga", "tomas gonzaga", "gonzaga", "dirceu"],
+      pais: ["brasil", "brasileiro", "brasileira", "portugal"],
+      seculo: ["xviii", "18", "dezoito"],
+      corrente: ["arcadismo", "neoclassicismo"]
+    },
+    linha1: "Quantas vezes Lidora me dizia,",
+    quarteto: "Quantas vezes Lidora me dizia,\nAo terno peito minha mão levando:\n— Conjurem-se em meu mal os Astros, quando\nAchares no meu peito aleivosia!",
+    completo: "Quantas vezes Lidora me dizia,\nAo terno peito minha mão levando:\n— Conjurem-se em meu mal os Astros, quando\nAchares no meu peito aleivosia!\n\nEntão que não chorasse lhe pedia,\nPor firme seu amor acreditando.\nAh! que em movendo os olhos, suspirando,\nAo mais acautelado enganaria!\n\nUm ano assim viveu. Oh! céus! agora\nMostrou que era mulher: a natureza\nSó por não se mudar a fez traidora.\n\nNão, não darei mais cultos à beleza,\nQue, depois de faltar à fé Lidora,\nNem creio que nas Deusas há firmeza."
+  },
+  {
+    id: "castro-alves--primeira-sombra-marieta",
+    titulo: "Primeira Sombra: Marieta",
+    autor: "Castro Alves",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo",
+    classico: true,
+    aliases: {
+      titulo: ["primeira sombra marieta", "marieta"],
+      autor: ["castro alves", "antonio frederico de castro alves"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo", "condoreirismo"]
+    },
+    linha1: "Como o gênio da noite, que desata",
+    quarteto: "Como o gênio da noite, que desata\nO véu de rendas sobre a espádua nua,\nEla solta os cabelos... Bate a lua\nNas alvas dobras de um lençol de prata...",
+    completo: "Como o gênio da noite, que desata\nO véu de rendas sobre a espádua nua,\nEla solta os cabelos... Bate a lua\nNas alvas dobras de um lençol de prata...\n\nO seio virginal, que a mão recata,\nEmbalde o prende a mão... cresce, flutua...\nSonha a moça ao relento... Além na rua\nPreludia um violão na serenata!...\n\n...Furtivos passos morrem no lajedo...\nResvala a escada do balcão discreta\nMatam lábios os beijos em segredo...\n\nAfoga-me os suspiros, Marieta!\nÓ surpresa! Ó palor! Ó pranto! Ó medo!\nAi! noites de Romeu e Julieta!..."
+  },
+  {
+    id: "machado-de-assis--circulo-vicioso",
+    titulo: "Círculo Vicioso",
+    autor: "Machado de Assis",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Realismo",
+    classico: true,
+    aliases: {
+      titulo: ["circulo vicioso"],
+      autor: ["machado de assis", "joaquim maria machado de assis", "machado"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["realismo"]
+    },
+    linha1: "Bailando no ar, gemia inquieto vaga-lume:",
+    quarteto: 'Bailando no ar, gemia inquieto vaga-lume:\n"Quem me dera que eu fosse aquela loura estrela,\nQue arde no eterno azul, como uma eterna vela!"\nMas a estrela, fitando a lua, com ciúme:',
+    completo: 'Bailando no ar, gemia inquieto vaga-lume:\n"Quem me dera que eu fosse aquela loura estrela,\nQue arde no eterno azul, como uma eterna vela!"\nMas a estrela, fitando a lua, com ciúme:\n\n"Pudesse eu copiar-te o transparente lume,\nQue, da grega coluna à gótica janela,\nContemplou, suspirosa, a fronte amada e bela!"\nMas a lua, fitando o sol com azedume:\n\n"Mísera! tivesse eu aquela enorme, aquela\nClaridade imortal, que toda a luz resume!"\nMas o sol, inclinando a rútila capela:\n\n"Pesa-me esta brilhante auréola de nume...\nEnfara-me esta azul e desmedida umbela...\nPor que não nasci eu um simples vaga-lume?"'
+  },
+  {
+    id: "raimundo-correia--as-pombas",
+    titulo: "As Pombas",
+    autor: "Raimundo Correia",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    classico: true,
+    aliases: {
+      titulo: ["as pombas", "pombas"],
+      autor: ["raimundo correia", "raimundo da mota azevedo correia"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "parnasiano"]
+    },
+    linha1: "Vai-se a primeira pomba despertada...",
+    quarteto: "Vai-se a primeira pomba despertada...\nVai-se outra mais... mais outra... enfim dezenas\nDe pombas vão-se dos pombais, apenas\nRaia sangüínea e fresca a madrugada...",
+    completo: "Vai-se a primeira pomba despertada...\nVai-se outra mais... mais outra... enfim dezenas\nDe pombas vão-se dos pombais, apenas\nRaia sangüínea e fresca a madrugada...\n\nE à tarde, quando a rígida nortada\nSopra, aos pombais de novo elas, serenas,\nRuflando as asas, sacudindo as penas,\nVoltam todas em bando e em revoada...\n\nTambém dos corações onde abotoam,\nOs sonhos, um por um, céleres voam,\nComo voam as pombas dos pombais;\n\nNo azul da adolescência as asas soltam,\nFogem... Mas aos pombais as pombas voltam,\nE eles aos corações não voltam mais..."
+  },
+  {
+    id: "cruz-e-sousa--sideracao",
+    titulo: "Sideração",
+    autor: "Cruz e Sousa",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Simbolismo",
+    classico: true,
+    aliases: {
+      titulo: ["sideracao"],
+      autor: ["cruz e sousa", "joao da cruz e sousa", "cruz e souza"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["simbolismo"]
+    },
+    linha1: "Para as estrelas de cristais gelados",
+    quarteto: "Para as estrelas de cristais gelados\nas ânsias e os desejos vão subindo,\ngalgando azuis e siderais noivados\nde nuvens brancas a amplidão vestindo...",
+    completo: "Para as estrelas de cristais gelados\nas ânsias e os desejos vão subindo,\ngalgando azuis e siderais noivados\nde nuvens brancas a amplidão vestindo...\n\nNum cortejo de cânticos alados\nos arcanjos, as cítaras ferindo,\npassam, das vestes nos trofeus prateados,\nas asas de ouro finamente abrindo...\n\nDos etéreos turíbulos de neve\nclaro incenso aromal, límpido e leve,\nondas nevoentas de Visões levanta...\n\nE as ânsias e os desejos infinitos\nvão com os arcanjos formulando ritos\nda Eternidade que nos Astros canta..."
+  },
+  {
+    id: "francesco-petrarca--voi-ch-ascoltate-in-rime-sparse-il-suono",
+    titulo: "Voi ch'ascoltate in rime sparse il suono",
+    autor: "Francesco Petrarca",
+    pais: "Itália",
+    seculo: "XIV",
+    corrente: "Humanismo (Petrarquismo)",
+    aliases: {
+      titulo: ["rime sparse", "voi chascoltate", "voi chascoltate in rime sparse il suono"],
+      autor: ["francesco petrarca", "petrarca", "petrarch"],
+      pais: ["italia", "italiano", "italiana"],
+      seculo: ["xiv", "14", "catorze"],
+      corrente: ["humanismo", "petrarquismo", "trecento"]
+    },
+    linha1: "Voi ch'ascoltate in rime sparse il suono",
+    quarteto: "Voi ch'ascoltate in rime sparse il suono\ndi quei sospiri ond'io nudriva 'l core\nin sul mio primo giovenile errore\nquand'era in parte altr'uom da quel ch'i' sono,",
+    completo: "Voi ch'ascoltate in rime sparse il suono\ndi quei sospiri ond'io nudriva 'l core\nin sul mio primo giovenile errore\nquand'era in parte altr'uom da quel ch'i' sono,\n\ndel vario stile in ch'io piango et ragiono\nfra le vane speranze e 'l van dolore,\nove sia chi per prova intenda amore,\nspero trovar pietà, nonché perdono.\n\nMa ben veggio or sì come al popol tutto\nfavola fui gran tempo, onde sovente\ndi me medesmo meco mi vergogno;\n\net del mio vaneggiar vergogna è 'l frutto,\ne 'l pentersi, e 'l conoscer chiaramente\nche quanto piace al mondo è breve sogno."
+  },
+  {
+    id: "pierre-de-ronsard--quand-vous-serez-bien-vieille",
+    titulo: "Quand vous serez bien vieille",
+    autor: "Pierre de Ronsard",
+    pais: "França",
+    seculo: "XVI",
+    corrente: "Pléiade (Renascimento francês)",
+    aliases: {
+      titulo: ["quand vous serez bien vieille"],
+      autor: ["pierre de ronsard", "ronsard"],
+      pais: ["franca", "frances", "francesa", "france"],
+      seculo: ["xvi", "16", "dezesseis"],
+      corrente: ["pleiade", "renascimento", "classicismo frances"]
+    },
+    linha1: "Quand vous serez bien vieille, au soir à la chandelle,",
+    quarteto: "Quand vous serez bien vieille, au soir à la chandelle,\nAssise auprès du feu, dévidant et filant,\nDirez, chantant mes vers, en vous émerveillant :\n« Ronsard me célébrait du temps que j'étais belle. »",
+    completo: "Quand vous serez bien vieille, au soir à la chandelle,\nAssise auprès du feu, dévidant et filant,\nDirez, chantant mes vers, en vous émerveillant :\n« Ronsard me célébrait du temps que j'étais belle. »\n\nLors, vous n'aurez servante oyant telle nouvelle,\nDéjà sous le labeur à demi sommeillant,\nQui au bruit de Ronsard ne s'aille réveillant,\nBénissant votre nom de louange immortelle.\n\nJe serai sous la terre, et, fantôme sans os,\nPar les ombres myrteux je prendrai mon repos :\nVous serez au foyer une vieille accroupie,\n\nRegrettant mon amour et votre fier dédain.\nVivez, si m'en croyez, n'attendez à demain :\nCueillez dès aujourd'hui les roses de la vie."
+  },
+  {
+    id: "alvares-de-azevedo--soneto-palida-a-luz-da-lampada-sombria",
+    titulo: "Soneto (Pálida à luz da lâmpada sombria)",
+    autor: "Álvares de Azevedo",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo (Ultrarromantismo)",
+    classico: true,
+    aliases: {
+      titulo: ["palida a luz da lampada sombria", "soneto palida", "soneto palida a luz da lampada sombria"],
+      autor: ["alvares de azevedo", "manuel antonio alvares de azevedo", "azevedo"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo", "ultrarromantismo", "byronismo", "segunda geracao", "mal do seculo"]
+    },
+    linha1: "Pálida à luz da lâmpada sombria,",
+    quarteto: "Pálida à luz da lâmpada sombria,\nSobre o leito de flores reclinada,\nComo a lua por noite embalsamada,\nEntre as nuvens do amor ela dormia!",
+    completo: "Pálida à luz da lâmpada sombria,\nSobre o leito de flores reclinada,\nComo a lua por noite embalsamada,\nEntre as nuvens do amor ela dormia!\n\nEra a virgem do mar, na escuma fria\nPela maré das águas embalada!\nEra um anjo entre nuvens d'alvorada\nQue em sonhos se banhava e se esquecia!\n\nEra a mais bela! Seio palpitando...\nNegros olhos as pálpebras abrindo...\nFormas nuas no leito resvalando...\n\nNão te rias de mim, meu anjo lindo!\nPor ti - as noites eu velei chorando,\nPor ti - nos sonhos morrerei sorrindo!"
+  },
+{
+    id: "manuel-botelho-de-oliveira--a-uma-caveira",
+    titulo: "A uma Caveira",
+    autor: "Manuel Botelho de Oliveira",
+    pais: "Brasil",
+    seculo: "XVII",
+    corrente: "Barroco",
+    aliases: {
+      titulo: ["a uma caveira", "uma caveira"],
+      autor: ["manuel botelho de oliveira", "botelho de oliveira"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xvii", "17", "dezessete"],
+      corrente: ["barroco"]
+    },
+    linha1: "Esta, que vês, Caveira pavorosa!",
+    quarteto: "Esta, que vês, Caveira pavorosa!\nEste, que vês, assombro denegrido!\nEste que vês, retrato carcomido!\nEsta que vês, pintura dolorosa!",
+    completo: "Esta, que vês, Caveira pavorosa!\nEste, que vês, assombro denegrido!\nEste que vês, retrato carcomido!\nEsta que vês, pintura dolorosa!\n\nEsta que vês, batalha temerosa!\nEste que vês, triunfo repetido!\nEste que vês, Castelo destruído!\nEsta que vês, Tragédia lastimosa!\n\nEsta enfim te apregoa a desventura\nCom o mudo pregão de teus enganos\nPera buscar a vida mais segura:\n\nSe olhos não tem, nem língua em breves anos,\nNesta cegueira vês tanta loucura,\nOuves neste silêncio os desenganos."
+  },
+  {
+    id: "manuel-botelho-de-oliveira--aos-maus-juizes",
+    titulo: "Aos Maus Juízes",
+    autor: "Manuel Botelho de Oliveira",
+    pais: "Brasil",
+    seculo: "XVII",
+    corrente: "Barroco",
+    aliases: {
+      titulo: ["aos maus juizes", "maus juizes"],
+      autor: ["manuel botelho de oliveira", "botelho de oliveira"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xvii", "17", "dezessete"],
+      corrente: ["barroco"]
+    },
+    linha1: "Que julgas, ó ministro da Justiça?",
+    quarteto: "Que julgas, ó ministro da Justiça?\nPor que fazes das leis arbítrio errado?\nCuidas que dás sentença sem pecado,\nSendo que algum respeito mais te atiça,",
+    completo: "Que julgas, ó ministro da Justiça?\nPor que fazes das leis arbítrio errado?\nCuidas que dás sentença sem pecado,\nSendo que algum respeito mais te atiça,\n\nPara obrar os enganos da justiça?\nBem que teu peito vive confiado,\nO entendimento tens todo arrastado\nPor amor, ou por ódio, ou por cobiça.\n\nSe tens amor, julgaste o que te manda;\nSe tens ódio, no inferno tens o pleito,\nSe tens cobiça, é bárbara e execranda.\n\nOh, miséria fatal de todo feito!\nQue não basta o direito da demanda,\nSe o julgador te nega esse direito..."
+  },
+  {
+    id: "claudio-manuel-da-costa--pastora-morta",
+    titulo: "Pastora Morta",
+    autor: "Cláudio Manuel da Costa",
+    pais: "Brasil",
+    seculo: "XVIII",
+    corrente: "Arcadismo",
+    aliases: {
+      titulo: ["pastora morta"],
+      autor: ["claudio manuel da costa", "claudio manuel", "glauceste saturnio"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xviii", "18", "dezoito"],
+      corrente: ["arcadismo", "neoclassicismo"]
+    },
+    linha1: "Parece, ou me engano, que esta fonte",
+    quarteto: "Parece, ou me engano, que esta fonte\nDe repente o licor deixou turvado;\nO céu, que estava limpo, e azulado,\nSe vai escurecendo no horizonte:",
+    completo: "Parece, ou me engano, que esta fonte\nDe repente o licor deixou turvado;\nO céu, que estava limpo, e azulado,\nSe vai escurecendo no horizonte:\n\nPor que não haja horror, que não aponte\nO agouro funestíssimo, e pesado,\nAté de susto já não pasta o gado;\nNem uma voz se escuta em todo o monte.\n\nUm raio de improviso na celeste\nRegião rebentou: um branco lírio\nDa cor das violetas se reveste;\n\nSerá delírio! não, não é delírio.\nQue é isto, pastor meu? que anúncio é este?\nMorreu Nise (ai de mim) tudo é martírio."
+  },
+  {
+    id: "claudio-manuel-da-costa--onde-estou",
+    titulo: "Onde Estou?",
+    autor: "Cláudio Manuel da Costa",
+    pais: "Brasil",
+    seculo: "XVIII",
+    corrente: "Arcadismo",
+    aliases: {
+      titulo: ["onde estou"],
+      autor: ["claudio manuel da costa", "claudio manuel", "glauceste saturnio"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xviii", "18", "dezoito"],
+      corrente: ["arcadismo", "neoclassicismo"]
+    },
+    linha1: "Onde estou? Este sítio desconheço:",
+    quarteto: "Onde estou? Este sítio desconheço:\nQuem fez tão diferente aquele prado?\nTudo outra natureza tem tomado;\nE em contemplá-lo tímido esmoreço.",
+    completo: "Onde estou? Este sítio desconheço:\nQuem fez tão diferente aquele prado?\nTudo outra natureza tem tomado;\nE em contemplá-lo tímido esmoreço.\n\nUma fonte aqui houve; eu não me esqueço\nDe estar a ela um dia reclinado:\nAli em vale um monte está mudado:\nQuanto pode dos anos o progresso!\n\nÁrvores aqui vi tão florescentes,\nQue faziam perpétua a primavera:\nNem troncos vejo agora decadentes.\n\nEu me engano: a região esta não era:\nMas que venho a estranhar, se estão presentes\nMeus males, com que tudo degenera!"
+  },
+  {
+    id: "goncalves-dias--baixel-veloz",
+    titulo: "Baixel Veloz",
+    autor: "Gonçalves Dias",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo (1ª geração - indianismo)",
+    aliases: {
+      titulo: ["baixel veloz"],
+      autor: ["goncalves dias", "antonio goncalves dias"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo", "indianismo"]
+    },
+    linha1: "Baixel veloz, que ao úmido elemento",
+    quarteto: "Baixel veloz, que ao úmido elemento\nA voz do nauta experto afoito entrega,\nDemora o curso teu, perto navega\nDa terra onde me fica o pensamento!",
+    completo: "Baixel veloz, que ao úmido elemento\nA voz do nauta experto afoito entrega,\nDemora o curso teu, perto navega\nDa terra onde me fica o pensamento!\n\nEnquanto vais cortando o salso argento,\nDesta praia feliz não se despega\n(Meus olhos, não, que amargo pranto os rega)\nMinha alma, sim, e o amor que é meu tormento.\n\nBaixel, que vais fugindo despiedado,\nSem temor dos contrastes da procela,\nVolta ao menos, qual vais tão apressado.\n\nEncontre-a eu gentil, mimosa e bela!\nE o pranto qu'ora verto amargurado,\nPossa eu verter então nos lábios dela!"
+  },
+  {
+    id: "goncalves-dias--a-esmeralda",
+    titulo: "A Esmeralda",
+    autor: "Gonçalves Dias",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo (1ª geração - indianismo)",
+    aliases: {
+      titulo: ["a esmeralda", "esmeralda"],
+      autor: ["goncalves dias", "antonio goncalves dias"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo", "indianismo"]
+    },
+    linha1: "Vede a soberba divinal criatura",
+    quarteto: "Vede a soberba divinal criatura\nNa \"Corte dos Milagres\" milagrosa!\nA caterva brutal estrepitosa\nEstranha e pasma tão gentil figura.",
+    completo: "Vede a soberba divinal criatura\nNa \"Corte dos Milagres\" milagrosa!\nA caterva brutal estrepitosa\nEstranha e pasma tão gentil figura.\n\nEncobre a peregrina formosura,\nTão estranha de si — tão graciosa,\nA mente inda mais bela e mais formosa,\nE inda mais pura do que a neve pura.\n\nAo ver a cortesã face mentida\nDesse que te salvou, que tanto amaste,\nPerdeste o coração — perdeste a vida.\n\nNão quebrou teu amor cruel tortura,\nCom ele inda no cárcere cismaste,\nFoi dele o teu pensar na morte escura."
+  },
+  {
+    id: "fagundes-varela--primeira-variante-desponta-a-estrela-d-alva",
+    titulo: "Primeira Variante (Desponta a Estrela d'Alva)",
+    autor: "Fagundes Varela",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo (3ª geração - condoreirismo)",
+    aliases: {
+      titulo: ["primeira variante", "desponta a estrela dalva", "primeira variante desponta a estrela dalva"],
+      autor: ["fagundes varela", "luis fagundes varela"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo", "condoreirismo"]
+    },
+    linha1: "Desponta a estrela d'alva, a noite morre,",
+    quarteto: "Desponta a estrela d'alva, a noite morre,\nPulam no mato alígeros cantores,\nE doce a brisa no arraial das flores,\nLânguidas queixas murmurando, corre.",
+    completo: "Desponta a estrela d'alva, a noite morre,\nPulam no mato alígeros cantores,\nE doce a brisa no arraial das flores,\nLânguidas queixas murmurando, corre.\n\nVolúvel tribo a solidão percorre\nDas borboletas de brilhantes cores;\nSoluça o arroio; diz a rola amores\nNas verdes balsas donde o orvalho escorre.\n\nTudo é luz e esplendor; tudo se esfuma\nÀs carícias d'aurora, ao céu risonho,\nAo fléreo bafo que o sertão perfuma!\n\nPorém minh'alma triste e sem um sonho\nRepete olhando o prado, o rio, a espuma:\n— Oh! mundo encantador, tu és medonho!"
+  },
+  {
+    id: "fagundes-varela--soneto-da-soledade-ou-da-soidade",
+    titulo: "Soneto da Soledade, ou da Soidade",
+    autor: "Fagundes Varela",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo (3ª geração - condoreirismo)",
+    aliases: {
+      titulo: ["soneto da soledade", "soneto da soidade", "soneto da soledade ou da soidade"],
+      autor: ["fagundes varela", "luis fagundes varela"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo", "condoreirismo"]
+    },
+    linha1: "Eu passava na vida errante e vago",
+    quarteto: "Eu passava na vida errante e vago\nComo o nauta perdido em noite escura,\nMas tu te ergueste peregrina e pura\nComo o cisne inspirado em manso lago.",
+    completo: "Eu passava na vida errante e vago\nComo o nauta perdido em noite escura,\nMas tu te ergueste peregrina e pura\nComo o cisne inspirado em manso lago.\n\nBeijava a onda num soluço mago\nDas moles plumas e brilhante alvura,\nE a voz ungida de eternal doçura\nRoçava as nuvens em divino afago.\n\nVi-te; e nas chamas de fervor profundo\nA teus pés afoguei a mocidade\nEsquecido de mim, de Deus, do mundo!\n\nMas ai! cedo fugiste!... da soidade,\nHoje te imploro desse amor tão fundo\nUma idéia, uma queixa, uma saudade!"
+  },
+  {
+    id: "alberto-de-oliveira--vaso-grego",
+    titulo: "Vaso Grego",
+    autor: "Alberto de Oliveira",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    classico: true,
+    aliases: {
+      titulo: ["vaso grego"],
+      autor: ["alberto de oliveira", "antonio mariano alberto de oliveira"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "parnasiano"]
+    },
+    linha1: "Esta, de áureos relevos, trabalhada",
+    quarteto: "Esta, de áureos relevos, trabalhada\nDe divas mãos, brilhante copa, um dia,\nJá de aos deuses servir como cansada,\nVinda do Olimpo, a um novo deus servia.",
+    completo: "Esta, de áureos relevos, trabalhada\nDe divas mãos, brilhante copa, um dia,\nJá de aos deuses servir como cansada,\nVinda do Olimpo, a um novo deus servia.\n\nEra o poeta de Teos que a suspendia\nEntão e, ora repleta ora esvazada,\nA taça amiga aos dedos seus tinia\nToda de roxas pétalas colmada.\n\nDepois... Mas o lavor da taça admira,\nToca-a, e, do ouvido aproximando-a, às bordas\nFinas hás de lhe ouvir, canora e doce,\n\nIgnota voz, qual se de antiga lira\nFosse a encantada música das cordas,\nQual se essa a voz de Anacreonte fosse."
+  },
+  {
+    id: "alberto-de-oliveira--o-ninho",
+    titulo: "O Ninho",
+    autor: "Alberto de Oliveira",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    aliases: {
+      titulo: ["o ninho", "ninho"],
+      autor: ["alberto de oliveira", "antonio mariano alberto de oliveira"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "parnasiano"]
+    },
+    linha1: "O musgo mais sedoso, a úsnea mais leve",
+    quarteto: "O musgo mais sedoso, a úsnea mais leve\nTrouxe de longe o alegre passarinho,\nE um dia inteiro ao sol paciente esteve\nCom o destro bico a arquitetar o ninho.",
+    completo: "O musgo mais sedoso, a úsnea mais leve\nTrouxe de longe o alegre passarinho,\nE um dia inteiro ao sol paciente esteve\nCom o destro bico a arquitetar o ninho.\n\nDa paina os vagos flocos cor de neve\nColhe, e por dentro o alfombra com carinho;\nE armado, pronto enfim, suspenso, em breve,\nEi-lo, balouça à beira do caminho.\n\nE a ave sobre ele as asas multicores\nEstende e sonha. Sonha que o áureo pólen\nE o néctar suga às mais brilhantes flores;\n\nSonha... Porém, de súbito, a violento\nAbalo acorda. Em torno as folhas bolem...\nÉ o vento! E o ninho lhe arrebata o vento!"
+  },
+  {
+    id: "vicente-de-carvalho--esperanca",
+    titulo: "Esperança",
+    autor: "Vicente de Carvalho",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    aliases: {
+      titulo: ["esperanca"],
+      autor: ["vicente de carvalho", "vicente augusto de carvalho"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "parnasiano"]
+    },
+    linha1: "Só a leve esperança, em toda a vida,",
+    quarteto: "Só a leve esperança, em toda a vida,\nDisfarça a pena de viver, mais nada;\nNem é mais a existência, resumida,\nQue uma grande esperança malograda.",
+    completo: "Só a leve esperança, em toda a vida,\nDisfarça a pena de viver, mais nada;\nNem é mais a existência, resumida,\nQue uma grande esperança malograda.\n\nO eterno sonho da alma desterrada,\nSonho que a traz ansiosa e embevecida,\nÉ uma hora feliz, sempre adiada\nE que não chega nunca em toda a vida.\n\nEssa felicidade que supomos,\nÁrvore milagrosa que sonhamos\nToda arreada de dourados pomos,\n\nExiste, sim: mas nós não a alcançamos\nPorque está sempre apenas onde a pomos\nE nunca a pomos onde nós estamos."
+  },
+  {
+    id: "vicente-de-carvalho--corrida-de-amor",
+    titulo: "Corrida de Amor",
+    autor: "Vicente de Carvalho",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    aliases: {
+      titulo: ["corrida de amor"],
+      autor: ["vicente de carvalho", "vicente augusto de carvalho"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "parnasiano"]
+    },
+    linha1: "Quando partiste, em pranto, descorada",
+    quarteto: "Quando partiste, em pranto, descorada\nA face, o lábio trêmulo... confesso:\nArrebatou-me um verdadeiro acesso\nDe raivosa paixão desatinada.",
+    completo: "Quando partiste, em pranto, descorada\nA face, o lábio trêmulo... confesso:\nArrebatou-me um verdadeiro acesso\nDe raivosa paixão desatinada.\n\nIa-se nos teus olhos, minha amada,\nA luz dos meus; e então, como um possesso,\nQuis arrojar-me atrás do trem expresso\nE seguir-te correndo pela estrada...\n\n\"Nem há dificuldade que não vença\nTão forte amor!\" pensei. Ah! como pensa\nErrado o vão querer das almas ternas!\n\nCom denodo, atirei-me sobre a linha...\nMas, ao fim de uns três passos, vi que tinha\nPara tão grande amor, bem curtas pernas..."
+  },
+  {
+    id: "francisca-julia--a-florista",
+    titulo: "A Florista",
+    autor: "Francisca Júlia",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    autora: true,
+    aliases: {
+      titulo: ["a florista", "florista"],
+      autor: ["francisca julia", "francisca julia da silva munster"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "parnasiano"]
+    },
+    linha1: "Suspensa ao braço a grávida corbelha,",
+    quarteto: "Suspensa ao braço a grávida corbelha,\nSegue a passo, tranqüila... O sol faísca...\nOs seus carmíneos lábios de mourisca\nSe abrem, sorrindo, numa flor vermelha.",
+    completo: "Suspensa ao braço a grávida corbelha,\nSegue a passo, tranqüila... O sol faísca...\nOs seus carmíneos lábios de mourisca\nSe abrem, sorrindo, numa flor vermelha.\n\nDeita à sombra de uma árvore. Uma abelha\nZumbe em torno ao cabaz... Uma ave, arisca,\nO pé do chão, pertinho dela, cisca,\nOlhando-a, às vezes, trêmula, de esguelha...\n\nAos ouvidos lhe soa um rumor brando\nDe folhas... Pouco a pouco, um leve sono\nLhe vai as grandes pálpebras cerrando...\n\nCai-lhe de um pé o rústico tamanco...\nE assim descalça, mostra, em abandono,\nO vultinho de um pé macio e branco."
+  },
+  {
+    id: "francisca-julia--musa-impassivel",
+    titulo: "Musa Impassível",
+    autor: "Francisca Júlia",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    autora: true,
+    aliases: {
+      titulo: ["musa impassivel"],
+      autor: ["francisca julia", "francisca julia da silva munster"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "parnasiano"]
+    },
+    linha1: "Musa! um gesto sequer de dor ou de sincero",
+    quarteto: "Musa! um gesto sequer de dor ou de sincero\nLuto jamais te afeie o cândido semblante!\nDiante de um Já conserva o mesmo orgulho e diante\nDe um morto o mesmo olhar e sobrecenho austero.",
+    completo: "Musa! um gesto sequer de dor ou de sincero\nLuto jamais te afeie o cândido semblante!\nDiante de um Já conserva o mesmo orgulho e diante\nDe um morto o mesmo olhar e sobrecenho austero.\n\nEm teus olhos não quero a lágrima; não quero\nEm tua boca o suave e idílico descante.\nCelebra ora um fantasma angüiforme de Dante,\nOra o vulto marcial de um guerreiro de Homero.\n\nDá-me o hemistíquio d'ouro, a imagem atrativa;\nA rima cujo som, de uma harmonia crebra,\nCante aos ouvidos d'alma; a estrofe limpa e viva;\n\nVersos que lembrem, com seus bárbaros ruídos,\nOra o áspero rumor de um calhau que se quebra,\nOra o surdo rumor de mármores partidos!"
+  },
+  {
+    id: "alphonsus-de-guimaraens--naufrago",
+    titulo: "Náufrago",
+    autor: "Alphonsus de Guimaraens",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Simbolismo",
+    aliases: {
+      titulo: ["naufrago"],
+      autor: ["alphonsus de guimaraens", "afonso henriques da costa guimaraes"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["simbolismo"]
+    },
+    linha1: "E temo, e temo tudo, e nem sei o que temo.",
+    quarteto: "E temo, e temo tudo, e nem sei o que temo.\nPerde-se o meu olhar pelas trevas sem fim.\nMedonha é a escuridão do céu, de extremo a extremo...\nDe que noite sem luar, mísero e triste, vim?",
+    completo: "E temo, e temo tudo, e nem sei o que temo.\nPerde-se o meu olhar pelas trevas sem fim.\nMedonha é a escuridão do céu, de extremo a extremo...\nDe que noite sem luar, mísero e triste, vim?\n\nAmedronta-me a terra, e se a contemplo, tremo.\nQue mistério fatal corveja sobre mim?\nE ao sentir-me no horror do caos, como um blasfemo,\nNão sei por que padeço, e choro, e anseio assim.\n\nA saudade tirita aos meus pés: vai deixando\nAtrás de si a mágoa e o sonho... E eu, miserando,\nCaminho para a morte alucinado e só.\n\nO naufrágio, meu Deus! Sou um navio sem mastros.\nComo custa a minha alma a transformar-se em astros,\nComo este corpo custa a desfazer-se em pó!"
+  },
+  {
+    id: "alphonsus-de-guimaraens--soneto-das-maos",
+    titulo: "Soneto das Mãos",
+    autor: "Alphonsus de Guimaraens",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Simbolismo",
+    aliases: {
+      titulo: ["soneto das maos"],
+      autor: ["alphonsus de guimaraens", "afonso henriques da costa guimaraes"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["simbolismo"]
+    },
+    linha1: "Mãos de finada, aquelas mãos de neve,",
+    quarteto: "Mãos de finada, aquelas mãos de neve,\nDe tons marfíneos, de ossatura rica,\nPairando no ar, num gesto brando e leve,\nQue parece ordenar mas que suplica.",
+    completo: "Mãos de finada, aquelas mãos de neve,\nDe tons marfíneos, de ossatura rica,\nPairando no ar, num gesto brando e leve,\nQue parece ordenar mas que suplica.\n\nErguem-se ao longe como se as eleve\nAlguém que ante os altares sacrifica:\nMãos que consagram, mãos que partem breve,\nMas cuja sombra nos meus olhos fica...\n\nMãos de esperança para as almas loucas,\nBrumosas mãos que vêm brancas, distantes,\nFechar ao mesmo tempo tantas bocas...\n\nSinto-as agora, ao luar, descendo juntas,\nGrandes, magoadas, pálidas, tateantes,\nCerrando os olhos das visões defuntas..."
+  },
+  {
+    id: "augusto-dos-anjos--psicologia-de-um-vencido",
+    titulo: "Psicologia de um Vencido",
+    autor: "Augusto dos Anjos",
+    pais: "Brasil",
+    seculo: "XIX-XX",
+    corrente: "Pré-modernismo",
+    classico: true,
+    aliases: {
+      titulo: ["psicologia de um vencido"],
+      autor: ["augusto dos anjos", "augusto de carvalho rodrigues dos anjos"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix-xx", "19", "20", "xix", "xx"],
+      corrente: ["pre-modernismo", "premodernismo"]
+    },
+    linha1: "Eu, filho do carbono e do amoníaco,",
+    quarteto: "Eu, filho do carbono e do amoníaco,\nMonstro de escuridão e rutilância,\nSofro, desde a epigênese da infância,\nA influência má dos signos do zodíaco.",
+    completo: "Eu, filho do carbono e do amoníaco,\nMonstro de escuridão e rutilância,\nSofro, desde a epigênese da infância,\nA influência má dos signos do zodíaco.\n\nProfundissimamente hipocondríaco,\nEste ambiente me causa repugnância...\nSobe-me à boca uma ânsia análoga à ânsia\nQue se escapa da boca de um cardíaco.\n\nJá o verme — este operário das ruínas —\nQue o sangue podre das carnificinas\nCome, e a vida em geral declara guerra,\n\nAnda a espreitar meus olhos para roê-los,\nE há de deixar-me apenas os cabelos,\nNa frialdade inorgânica da terra!"
+  },
+  {
+    id: "augusto-dos-anjos--versos-intimos",
+    titulo: "Versos Íntimos",
+    autor: "Augusto dos Anjos",
+    pais: "Brasil",
+    seculo: "XIX-XX",
+    corrente: "Pré-modernismo",
+    classico: true,
+    aliases: {
+      titulo: ["versos intimos"],
+      autor: ["augusto dos anjos", "augusto de carvalho rodrigues dos anjos"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix-xx", "19", "20", "xix", "xx"],
+      corrente: ["pre-modernismo", "premodernismo"]
+    },
+    linha1: "Vês! Ninguém assistiu ao formidável",
+    quarteto: "Vês! Ninguém assistiu ao formidável\nEnterro de tua última quimera.\nSomente a Ingratidão — esta pantera —\nFoi tua companheira inseparável!",
+    completo: "Vês! Ninguém assistiu ao formidável\nEnterro de tua última quimera.\nSomente a Ingratidão — esta pantera —\nFoi tua companheira inseparável!\n\nAcostuma-te à lama que te espera!\nO Homem, que, nesta terra miserável,\nMora, entre feras, sente inevitável\nNecessidade de também ser fera.\n\nToma um fósforo. Acende teu cigarro!\nO beijo, amigo, é a véspera do escarro,\nA mão que afaga é a mesma que apedreja.\n\nSe a alguém causa inda pena a tua chaga,\nApedreja essa mão vil que te afaga,\nEscarra nessa boca que te beija!"
+  },
+  {
+    id: "auta-de-souza--a-minha-avo",
+    titulo: "A Minha Avó",
+    autor: "Auta de Souza",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Simbolismo (pré-modernismo)",
+    autora: true,
+    aliases: {
+      titulo: ["a minha avo", "minha avo"],
+      autor: ["auta de souza"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["simbolismo", "pre-modernismo"]
+    },
+    linha1: "Minh'alma vai cantar, alma sagrada!",
+    quarteto: "Minh'alma vai cantar, alma sagrada!\nRaio de sol dos meus primeiros dias...\nGota de luz nas regiões sombrias\nDe minha vida triste e amargurada.",
+    completo: "Minh'alma vai cantar, alma sagrada!\nRaio de sol dos meus primeiros dias...\nGota de luz nas regiões sombrias\nDe minha vida triste e amargurada.\n\nMinh'alma vai cantar, velhinha amada!\nRio onde correm minhas alegrias...\nAnjo bendito que me refugias\nNas tuas asas contra a sina irada!\n\nMinh'alma vai cantar... Transforma o seio\nN'um cofre santo de carícias cheio,\nPara este livro todo o meu tesouro...\n\nEu quero vê-lo, em desejada calma,\nNo rico santuário de tu'alma...\n— Hóstia guardada num cibório de ouro!"
+  },
+  {
+    id: "auta-de-souza--o-beija-flor",
+    titulo: "O Beija-Flor",
+    autor: "Auta de Souza",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Simbolismo (pré-modernismo)",
+    autora: true,
+    aliases: {
+      titulo: ["o beija flor", "beija flor"],
+      autor: ["auta de souza"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["simbolismo", "pre-modernismo"]
+    },
+    linha1: "Acostumei-me a vê-lo todo o dia",
+    quarteto: "Acostumei-me a vê-lo todo o dia\nDe manhãzinha, alegre e prazenteiro,\nBeijando as brancas flores de um canteiro\nNo meu jardim — a pátria da ambrosia.",
+    completo: "Acostumei-me a vê-lo todo o dia\nDe manhãzinha, alegre e prazenteiro,\nBeijando as brancas flores de um canteiro\nNo meu jardim — a pátria da ambrosia.\n\nPequeno e lindo, só me parecia\nQue era da noite o sonho derradeiro...\nVinha trazer às rosas o primeiro\nBeijo do Sol, nessa manhã tão fria!\n\nUm dia foi-se e não voltou... Mas quando\nA suspirar me ponho, contemplando,\nSombria e triste, o meu jardim risonho...\n\nDigo, a pensar no tempo já passado:\nTalvez, ó coração amargurado,\nAquele beija-flor fosse o teu sonho!"
+  },
+  {
+    id: "goncalves-crespo--quimeras",
+    titulo: "Quimeras",
+    autor: "Gonçalves Crespo",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Realismo/Parnasianismo",
+    aliases: {
+      titulo: ["quimeras"],
+      autor: ["goncalves crespo", "antonio candido goncalves crespo"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["realismo", "parnasianismo"]
+    },
+    linha1: "O mar já me tentou: aspirações fogosas",
+    quarteto: "O mar já me tentou: aspirações fogosas\nFizeram-me idear fantásticas viagens;\nEu sonhava trazer de incógnitas paragens\nNotícias imortais às gentes curiosas.",
+    completo: "O mar já me tentou: aspirações fogosas\nFizeram-me idear fantásticas viagens;\nEu sonhava trazer de incógnitas paragens\nNotícias imortais às gentes curiosas.\n\nMais tarde desejei riquezas fabulosas,\nUm palácio escondido em mármuras folhagens,\nOnde eu fosse ocultar as cândidas imagens\nDas virgens que evoquei por noites silenciosas.\n\nMas, tudo isso passou: agora só me resta\nDas quimeras que tive, uma visão modesta,\nUm sonho encantador, de paz e de ventura.\n\nÉ simples: uma alcova, um berço, um inocente,\nE uma esposa adorada, envolta, a negligente!\nDe um longo penteador na imaculada alvura..."
+  },
+  {
+    id: "goncalves-crespo--na-aldeia",
+    titulo: "Na Aldeia",
+    autor: "Gonçalves Crespo",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Realismo/Parnasianismo",
+    aliases: {
+      titulo: ["na aldeia"],
+      autor: ["goncalves crespo", "antonio candido goncalves crespo"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["realismo", "parnasianismo"]
+    },
+    linha1: "Duas horas da tarde. Um sol ardente",
+    quarteto: "Duas horas da tarde. Um sol ardente\nNos colmos dardejando, e nos eirados.\nSobreleva aos sussurros abafados\nO grito das bigornas estridente.",
+    completo: "Duas horas da tarde. Um sol ardente\nNos colmos dardejando, e nos eirados.\nSobreleva aos sussurros abafados\nO grito das bigornas estridente.\n\nA taberna é vazia; mansamente\nTreme o loureiro nos umbrais pintados;\nZumbem à porta insetos variegados,\nEnvolvidos do sol na luz tremente.\n\nFia à soleira uma velhinha: o filho\nNo céu mal acordou da aurora o brilho\nSaiu para os cansaços da lavoura.\n\nA nora lava na ribeira, e os netos\nAo longe correm seminus, inquietos,\nNo mar ondeante da seara loura."
+  },
+  {
+    id: "martins-fontes--brasil",
+    titulo: "Brasil!",
+    autor: "Martins Fontes",
+    pais: "Brasil",
+    seculo: "XX",
+    corrente: "Parnasianismo tardio",
+    aliases: {
+      titulo: ["brasil"],
+      autor: ["martins fontes", "jose martins fontes"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xx", "20", "vinte"],
+      corrente: ["parnasianismo"]
+    },
+    linha1: "Brasil! palavra mágica! Quem há",
+    quarteto: "Brasil! palavra mágica! Quem há\nQue o não evoque, ouvindo-a? Mas quem é\nQue não se abrasa de esperança e fé,\nAnte esta voz que o sonho acordará?",
+    completo: "Brasil! palavra mágica! Quem há\nQue o não evoque, ouvindo-a? Mas quem é\nQue não se abrasa de esperança e fé,\nAnte esta voz que o sonho acordará?\n\nEm Brasil há o sabor do cambucá,\nDo caju, do ananás ou do café,\nO cheiro dos jasmins no Sumaré,\nDas mangas fulvas de Itamaracá!\n\nBrasil! brasume irial, nome rubi!\nTão perfumado quanto o bacuri,\nQuanto a gardênia do Caraparaí!\n\nBrasil! se és beijo, flor e fruto és tu!\nVergel que o ouro do sol transmuda em pó,\nE onde canta ao luar o irapuru!"
+  },
+  {
+    id: "martins-fontes--gota-d-agua",
+    titulo: "Gota d'Água",
+    autor: "Martins Fontes",
+    pais: "Brasil",
+    seculo: "XX",
+    corrente: "Parnasianismo tardio",
+    aliases: {
+      titulo: ["gota dagua"],
+      autor: ["martins fontes", "jose martins fontes"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xx", "20", "vinte"],
+      corrente: ["parnasianismo"]
+    },
+    linha1: "Despertar. O dilúculo termina.",
+    quarteto: "Despertar. O dilúculo termina.\nA alba rufa os tambores pelos montes...\nAfã. A claridade matutina\nRasga os céus, abre novos horizontes.",
+    completo: "Despertar. O dilúculo termina.\nA alba rufa os tambores pelos montes...\nAfã. A claridade matutina\nRasga os céus, abre novos horizontes.\n\nOutra ilusão os ares ilumina.\nFulvo, jorrando das perpétuas fontes,\nO dilúvio do sol enche a campina,\nInunda estâncias, recobrindo pontes...\n\nPerturba o coração este epicênio!\nMas, julgando improfícuo o sacrifício,\nNestas horas de ação, formidolosas,\n\nGota d'água no mar da Humanidade,\nContinuo a rimar na soledade,\nOuvindo estrelas, cultivando rosas."
+  },
+  {
+    id: "luis-delfino--gaivotas",
+    titulo: "Gaivotas",
+    autor: "Luís Delfino",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo/Romantismo tardio",
+    aliases: {
+      titulo: ["gaivotas"],
+      autor: ["luis delfino", "luis delfino dos santos"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "romantismo"]
+    },
+    linha1: "Do crespo mar azul brancas gaivotas",
+    quarteto: "Do crespo mar azul brancas gaivotas\nVoam — de leite e neve o céu manchando,\nE vão abrindo às regiões remotas\nAs asas, em silêncio, à tarde, e em bando.",
+    completo: "Do crespo mar azul brancas gaivotas\nVoam — de leite e neve o céu manchando,\nE vão abrindo às regiões remotas\nAs asas, em silêncio, à tarde, e em bando.\n\nDepois se perdem pelo espaço ignotas,\nO ninho das estrelas procurando:\nCerras os cílios, com teu dedo notas\nQue elas vêm outra vez o azul furando.\n\nUma na vaga bulhiçosa dorme,\nUma revoa em cima, outra mais baixo...\nE ronca o abismo do oceano enorme...\n\nCai o sol, como já queimado facho...\nDo lado oposto espia a noite informe...\nTu me perguntas se isto é belo?... e eu acho..."
+  },
+  {
+    id: "luis-delfino--a-preta-na-cabana",
+    titulo: "A Preta na Cabana",
+    autor: "Luís Delfino",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo/Romantismo tardio",
+    aliases: {
+      titulo: ["a preta na cabana", "preta na cabana"],
+      autor: ["luis delfino", "luis delfino dos santos"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "romantismo"]
+    },
+    linha1: "Esta preta que vês junto à cabana,",
+    quarteto: "Esta preta que vês junto à cabana,\nVelha, gasta, pedindo-te uma esmola,\nTeve na terra benfazeja a escola\nDo trabalho, do amor, da luta humana.",
+    completo: "Esta preta que vês junto à cabana,\nVelha, gasta, pedindo-te uma esmola,\nTeve na terra benfazeja a escola\nDo trabalho, do amor, da luta humana.\n\nDeixou a pátria tórrida africana\nPelo Brasil, onde é soberba a flora;\nE, no país, em que ela é livre agora,\nViveu escrava e a um tempo soberana.\n\nMisturou o seu sangue ao nosso sangue,\nO seu suor, no campo, ao suor da aurora,\nDeu força e alento ao nosso corpo langue.\n\nHelena, inda hoje embala-nos nas sestas,\nComo ria no lar conosco outrora,\nE eram suas também as nossas festas..."
+  },
+  {
+    id: "laurindo-rabelo--conta-e-tempo",
+    titulo: "Conta e Tempo",
+    autor: "Laurindo Rabelo",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo",
+    aliases: {
+      titulo: ["conta e tempo"],
+      autor: ["laurindo rabelo", "laurindo jose da silva rabelo", "poeta lagartixa"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo"]
+    },
+    linha1: "Deus pede estrita conta do meu tempo,",
+    quarteto: "Deus pede estrita conta do meu tempo,\nÉ forçoso do tempo já dar conta;\nMas como dar em tempo tanta conta,\nEu que gastei sem conta tanto tempo?",
+    completo: "Deus pede estrita conta do meu tempo,\nÉ forçoso do tempo já dar conta;\nMas como dar em tempo tanta conta,\nEu que gastei sem conta tanto tempo?\n\nPara ter minha conta feita a tempo,\nDado me foi bom tempo e não fiz conta.\nNão quis, sobrando tempo, fazer conta;\nQuero, hoje, fazer conta e falta tempo.\n\nOh! vós que tendes tempo sem ter conta,\nNão gasteis esse tempo em passa-tempo:\nCuidai enquanto é tempo em fazer conta.\n\nMas, oh! se esses que contam com seu tempo\nFizessem desse tempo alguma conta,\nNão choravam, como eu, o não ter tempo."
+  },
+  {
+    id: "junqueira-freire--desprezo",
+    titulo: "Desprezo",
+    autor: "Junqueira Freire",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo (Ultrarromantismo)",
+    aliases: {
+      titulo: ["desprezo"],
+      autor: ["junqueira freire", "luis jose junqueira freire"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo", "ultrarromantismo"]
+    },
+    linha1: "Arda de raiva contra mim a intriga,",
+    quarteto: "Arda de raiva contra mim a intriga,\nMorra de dor a inveja insaciável;\nDestile seu veneno detestável\nA vil calúnia, pérfida, inimiga.",
+    completo: "Arda de raiva contra mim a intriga,\nMorra de dor a inveja insaciável;\nDestile seu veneno detestável\nA vil calúnia, pérfida, inimiga.\n\nUna-se todo em traiçoeira liga,\nContra mim só o mundo miserável;\nAlimente por mim ódio entranhável\nO coração da terra que me abriga.\n\nSei rir-me da vaidade dos humanos;\nSei desprezar um nome não preciso;\nSei insultar uns cálculos insanos.\n\nDurmo feliz sobre o suave riso\nDe uns lábios de mulher gentis, ufanos;\nE o mais que os homens dão, desprezo e piso."
+  },
+  {
+    id: "maciel-monteiro--formosa",
+    titulo: "Formosa",
+    autor: "Maciel Monteiro",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo (transição do Classicismo)",
+    aliases: {
+      titulo: ["formosa"],
+      autor: ["maciel monteiro", "antonio peregrino de maciel monteiro", "barao de itamaraca"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo", "classicismo"]
+    },
+    linha1: "Formosa, qual pincel em tela fina",
+    quarteto: "Formosa, qual pincel em tela fina\nDebuxar jamais pôde ou nunca ousara;\nFormosa, qual jamais desabrochara\nNa primavera rosa purpurina;",
+    completo: "Formosa, qual pincel em tela fina\nDebuxar jamais pôde ou nunca ousara;\nFormosa, qual jamais desabrochara\nNa primavera rosa purpurina;\n\nFormosa, qual se a própria mão divina\nLhe alinhara o contorno e a forma rara;\nFormosa, qual jamais no céu brilhara\nAstro gentil, estrela peregrina;\n\nFormosa, qual se a natureza e a arte,\nDando as mãos em seus dons, em seus lavores\nJamais soube imitar no todo ou parte;\n\nMulher celeste, oh! anjo de primores!\nQuem pode ver-te, sem querer amar-te?\nQuem pode amar-te, sem morrer de amores?!"
+  },
+  {
+    id: "maciel-monteiro--soneto-a-candiani",
+    titulo: "Soneto à Candiani",
+    autor: "Maciel Monteiro",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo (transição do Classicismo)",
+    aliases: {
+      titulo: ["soneto a candiani"],
+      autor: ["maciel monteiro", "antonio peregrino de maciel monteiro", "barao de itamaraca"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo", "classicismo"]
+    },
+    linha1: "Em que fonte de canto e de doçura",
+    quarteto: "Em que fonte de canto e de doçura\nBebeste, ó Candiani, a voz divina,\nQue arrebata a quem sente e meiga ensina\nA sentir té amar a penha dura?",
+    completo: "Em que fonte de canto e de doçura\nBebeste, ó Candiani, a voz divina,\nQue arrebata a quem sente e meiga ensina\nA sentir té amar a penha dura?\n\nQual anjo da sagrada, empírea altura\nN'harpa d'ouro os teus sons concerta e afina?\nQual doce aura do céu adeja... trina\nNos teus lábios co'as graças de mistura?\n\nDe ferro armado, armada de verbena,\nQuem de Norma infeliz o canto exprime\nComo tu a paixão, a mágoa, a pena?\n\nSe delinqües de amor, ama-se o crime!\nSe te ameigas a amor, quanto és amena!\nSe te imolas a amor, quanto és sublime!"
+  },
+  {
+    id: "guimaraes-junior--visita-a-casa-paterna",
+    titulo: "Visita à Casa Paterna",
+    autor: "Guimarães Júnior",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo/Parnasianismo",
+    aliases: {
+      titulo: ["visita a casa paterna"],
+      autor: ["guimaraes junior", "luis caetano pereira guimaraes junior"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo", "parnasianismo"]
+    },
+    linha1: "Como a ave que volta ao ninho antigo,",
+    quarteto: "Como a ave que volta ao ninho antigo,\nDepois de um longo e tenebroso inverno,\nEu quis também rever o lar paterno,\nO meu primeiro e virginal abrigo.",
+    completo: "Como a ave que volta ao ninho antigo,\nDepois de um longo e tenebroso inverno,\nEu quis também rever o lar paterno,\nO meu primeiro e virginal abrigo.\n\nEntrei. Um gênio carinhoso e amigo,\nO fantasma, talvez, do amor materno,\nTomou-me as mãos — olhou-me grave e terno,\nE, passo a passo, caminhou comigo.\n\nEra esta a sala... (Oh! se me lembro! e quanto!)\nEm que, da luz noturna à claridade,\nMinhas irmãs e minha Mãe... O pranto\n\nJorrou-me em ondas... Resistir quem há de?\n— Uma ilusão gemia em cada canto,\nChorava em cada canto uma saudade..."
+  },
+  {
+    id: "guimaraes-junior--o-sono-de-um-anjo",
+    titulo: "O Sono de um Anjo",
+    autor: "Guimarães Júnior",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo/Parnasianismo",
+    aliases: {
+      titulo: ["o sono de um anjo", "sono de um anjo"],
+      autor: ["guimaraes junior", "luis caetano pereira guimaraes junior"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo", "parnasianismo"]
+    },
+    linha1: "Quando ela dorme, como dorme a estrela",
+    quarteto: "Quando ela dorme, como dorme a estrela\nNos vapores da tímida alvorada,\nE a sua doce fronte extasiada,\nMais perfeita que um lírio, e tão singela,",
+    completo: "Quando ela dorme, como dorme a estrela\nNos vapores da tímida alvorada,\nE a sua doce fronte extasiada,\nMais perfeita que um lírio, e tão singela,\n\nTão serena, tão lúcida, tão bela,\nComo dos anjos a cabeça amada,\nRepousa na cambraia perfumada,\nEu velo absorto o casto sono dela.\n\nE rogo a Deus, enquanto a estrela brilha,\nDeus que protege a planta e a flor obscura,\nE nos indica do futuro a trilha,\n\nDeus, por quem toda a criação se humilha,\nQue tenha pena dessa criatura,\nDesse botão de flor — que é minha filha."
+  },
+  {
+    id: "coelho-neto--ser-mae",
+    titulo: "Ser Mãe",
+    autor: "Coelho Neto",
+    pais: "Brasil",
+    seculo: "XIX-XX",
+    corrente: "Parnasianismo/Pré-modernismo",
+    aliases: {
+      titulo: ["ser mae"],
+      autor: ["coelho neto", "henrique maximiano coelho neto"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix-xx", "19", "20"],
+      corrente: ["parnasianismo", "pre-modernismo", "premodernismo"]
+    },
+    linha1: "Ser mãe é desdobrar fibra por fibra",
+    quarteto: "Ser mãe é desdobrar fibra por fibra\nO coração! Ser mãe é ter no alheio\nLábio, que suga, o pedestal do seio,\nOnde a vida, onde o amor cantando vibra.",
+    completo: "Ser mãe é desdobrar fibra por fibra\nO coração! Ser mãe é ter no alheio\nLábio, que suga, o pedestal do seio,\nOnde a vida, onde o amor cantando vibra.\n\nSer mãe é ser um anjo que se libra\nSobre um berço dormido; é ser anseio,\nÉ ser temeridade, é ser receio,\nÉ ser força que os males equilibra!\n\nTodo o bem que a mãe goza é bem do filho,\nEspelho em que se mira afortunada,\nLuz que lhe põe nos olhos novo brilho!\n\nSer mãe é andar chorando num sorriso!\nSer mãe é ter um mundo e não ter nada!\nSer mãe é padecer num paraíso!"
+  },
+  {
+    id: "pedro-kilkerry--floresta-morta",
+    titulo: "Floresta Morta",
+    autor: "Pedro Kilkerry",
+    pais: "Brasil",
+    seculo: "XIX-XX",
+    corrente: "Simbolismo (proto-modernismo)",
+    aliases: {
+      titulo: ["floresta morta"],
+      autor: ["pedro kilkerry", "pedro militao kilkerry"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix-xx", "19", "20"],
+      corrente: ["simbolismo"]
+    },
+    linha1: "Por que, à luz de um sol de primavera",
+    quarteto: "Por que, à luz de um sol de primavera\nUma floresta morta? Um passarinho\nCruzou, fugindo-a, o seio que lhe dera\nAbrigo e pouso e que lhe guarda o ninho.",
+    completo: "Por que, à luz de um sol de primavera\nUma floresta morta? Um passarinho\nCruzou, fugindo-a, o seio que lhe dera\nAbrigo e pouso e que lhe guarda o ninho.\n\nNem vale, agora, a mesma vida, que era\nComo a doçura quente de um carinho,\nE onde flores abriam, vai a fera\n— Vidrado o olhar — lá vai pelo caminho.\n\nAh! quanto dói o vê-la, aqui, Setembro,\nInda banhada pela mesma vida!\nFloresta morta a mesma coisa lembro;\n\nSob outro céu assim, que pouco importa,\nAbrigo é fera, mas, da ave fugida,\nHá no meu peito uma floresta morta."
+  },
+  {
+    id: "augusto-de-lima--paisagem-nostalgica",
+    titulo: "Paisagem Nostálgica",
+    autor: "Augusto de Lima",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    aliases: {
+      titulo: ["paisagem nostalgica"],
+      autor: ["augusto de lima", "antonio augusto de lima"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo"]
+    },
+    linha1: "Deixei meu berço por destino incerto,",
+    quarteto: "Deixei meu berço por destino incerto,\nMas a paisagem, guardo-a na pupila.\nGuardo-a no coração, donde se estila\nToda a essência das lágrimas que verto.",
+    completo: "Deixei meu berço por destino incerto,\nMas a paisagem, guardo-a na pupila.\nGuardo-a no coração, donde se estila\nToda a essência das lágrimas que verto.\n\nSons de sino perdidos no deserto...\nCampanários da quase oculta Vila...\nSerros magoados que a distância anila,\nMais formosos de longe que de perto.\n\nNão vos esquecerei, por me lembrardes,\nEnquanto prantear do alto das tardes,\nA estrela Vésper que me viu partir.\n\nDo astro do sonho onde minha alma adeja,\nQuando colher as asas, só deseja,\nNo vosso seio maternal dormir."
+  },
+  {
+    id: "augusto-de-lima--evangelho-e-alcorao",
+    titulo: "Evangelho e Alcorão",
+    autor: "Augusto de Lima",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    aliases: {
+      titulo: ["evangelho e alcorao"],
+      autor: ["augusto de lima", "antonio augusto de lima"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo"]
+    },
+    linha1: "Num tom de voz que a piedade ungia,",
+    quarteto: "Num tom de voz que a piedade ungia,\nFalava o padre ao crente do Alcorão,\nQue no leito de morte se estorcia:\n\"Implora de Jesus a compaixão.\"",
+    completo: "Num tom de voz que a piedade ungia,\nFalava o padre ao crente do Alcorão,\nQue no leito de morte se estorcia:\n\"Implora de Jesus a compaixão.\"\n\n\"Deixa Mafoma, ó filho da heresia,\nE abraça a sacrossanta religião\nDo que morreu por nós...\" E concluía:\n\"Se te queres salvar morre cristão.\"\n\nAo filho de Jesus, o moribundo,\nErgueu o olhar esbranquiçado e fundo,\nOnde da morte já descia o véu.\n\nMas logo se estorceu na ânsia extrema\nE ao ver da Redenção o triste emblema,\nRuge expirando: \"Alá nunca morreu!\"."
+  },
+  {
+    id: "emilio-de-meneses--noturno",
+    titulo: "Noturno",
+    autor: "Emílio de Meneses",
+    pais: "Brasil",
+    seculo: "XIX-XX",
+    corrente: "Parnasianismo (satírico)",
+    aliases: {
+      titulo: ["noturno"],
+      autor: ["emilio de meneses"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix-xx", "19", "20"],
+      corrente: ["parnasianismo"]
+    },
+    linha1: "Tudo cor de azeitona. Fim do mês.",
+    quarteto: "Tudo cor de azeitona. Fim do mês.\nNoite opípara: a lua, qual pedaço\nDe manjar branco, gira pelo espaço.\nErgue-se o monte como um bolo inglês.",
+    completo: "Tudo cor de azeitona. Fim do mês.\nNoite opípara: a lua, qual pedaço\nDe manjar branco, gira pelo espaço.\nErgue-se o monte como um bolo inglês.\n\nVejo a calda do oceano e a languidez\nDa geléia d'arbustos que, em melaço\nDe orvalho, treme à aragem. Há um bagaço\nDe nuvens no ar. O mar, de vez em vez,\n\nLança n'areia espumas de cerveja...\nVejo um sorvete e até de abacaxi\nSob a forma de torre de uma igreja!\n\nPelo espinheiro além, quanto palito!\nE as estrelas, no céu, longe daqui,\nSão biscoitos jogados no infinito!"
+  },
+  {
+    id: "emilio-de-meneses--mesmice",
+    titulo: "Mesmice",
+    autor: "Emílio de Meneses",
+    pais: "Brasil",
+    seculo: "XIX-XX",
+    corrente: "Parnasianismo (satírico)",
+    aliases: {
+      titulo: ["mesmice"],
+      autor: ["emilio de meneses"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix-xx", "19", "20"],
+      corrente: ["parnasianismo"]
+    },
+    linha1: "Quisera eu pôr nestes quatorze versos",
+    quarteto: "Quisera eu pôr nestes quatorze versos\nUm leve, fino, alegre comentário\nA algum novo e notável caso diário,\nEntre os casos urbanos mais diversos.",
+    completo: "Quisera eu pôr nestes quatorze versos\nUm leve, fino, alegre comentário\nA algum novo e notável caso diário,\nEntre os casos urbanos mais diversos.\n\nPercorro dos jornais o noticiário,\nLeio artigos e tópicos dispersos,\nA pedidos satânicos, perversos,\nDesastres, crimes, contos-do-vigário.\n\nNada encontro que inspire à alegre musa\nUma nota satírica e atrevida\nQue nos nervos um frêmito produza.\n\nÉ sempre a mesma coisa repetida:\nLuza o sol, venha a noite, o sol reluza,\nComo o banal, se reproduz a vida!"
+  },
+  {
+    id: "raul-de-leoni--sei-de-tudo",
+    titulo: "Sei de Tudo",
+    autor: "Raul de Leoni",
+    pais: "Brasil",
+    seculo: "XX",
+    corrente: "Pós-simbolismo",
+    aliases: {
+      titulo: ["sei de tudo"],
+      autor: ["raul de leoni", "raul de leoni ramos"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xx", "20", "vinte"],
+      corrente: ["pos-simbolismo", "possimbolismo"]
+    },
+    linha1: "Sei de tudo o que existe pelo mundo.",
+    quarteto: "Sei de tudo o que existe pelo mundo.\nA forma, o modo, o espírito e os destinos.\nSei da vida das almas e aprofundo\nO mistério dos seres pequeninos.",
+    completo: "Sei de tudo o que existe pelo mundo.\nA forma, o modo, o espírito e os destinos.\nSei da vida das almas e aprofundo\nO mistério dos seres pequeninos.\n\nSei da ciência do Espaço, sei o fundo\nDa terra e os grandes mundos submarinos,\nSei o Sol, sei o Som e o elo profundo\nQue há entre os passos humanos e os divinos.\n\nSei de todas as cousas, a teoria\nDo Universo e as longínquas perspectivas\nQue emergem da expressão das cousas vivas.\n\nSei de tudo e — oh! tristíssima ironia! —\nPelo caminho eterno por que vou,\nEu, que sei tudo, só não sei quem sou..."
+  },
+  {
+    id: "raul-de-leoni--adolescencia",
+    titulo: "Adolescência",
+    autor: "Raul de Leoni",
+    pais: "Brasil",
+    seculo: "XX",
+    corrente: "Pós-simbolismo",
+    aliases: {
+      titulo: ["adolescencia"],
+      autor: ["raul de leoni", "raul de leoni ramos"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xx", "20", "vinte"],
+      corrente: ["pos-simbolismo", "possimbolismo"]
+    },
+    linha1: "Eu era uma alma fácil e macia,",
+    quarteto: "Eu era uma alma fácil e macia,\nClaro e sereno espelho matinal\nQue a paisagem das cousas refletia,\nCom a lucidez cantante do cristal.",
+    completo: "Eu era uma alma fácil e macia,\nClaro e sereno espelho matinal\nQue a paisagem das cousas refletia,\nCom a lucidez cantante do cristal.\n\nTendo os instintos por filosofia,\nEra um ser mansamente natural,\nEm cuja meiga ingenuidade havia\nUma alegre intuição universal.\n\nEntretinham-me as ricas tessituras\nDas lendas de ouro, cheias de horizontes\nE de imaginações maravilhosas.\n\nE eu passava entre as cousas e as criaturas,\nSimples como a água lírica das fontes\nE puro como o espírito das rosas..."
+  },
+  {
+    id: "emiliano-perneta--iguacu",
+    titulo: "Iguaçu",
+    autor: "Emiliano Perneta",
+    pais: "Brasil",
+    seculo: "XIX-XX",
+    corrente: "Simbolismo",
+    aliases: {
+      titulo: ["iguacu"],
+      autor: ["emiliano perneta", "emiliano dave perneta"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix-xx", "19", "20"],
+      corrente: ["simbolismo"]
+    },
+    linha1: "Ó rio que nasceu onde nasci, ó rio",
+    quarteto: "Ó rio que nasceu onde nasci, ó rio\nCalmo da minha infância, ora doce, ora má,\nBelo estuário azul, espelhado e sombrio,\nQuanto susto me deu, quanto prazer me dá!",
+    completo: "Ó rio que nasceu onde nasci, ó rio\nCalmo da minha infância, ora doce, ora má,\nBelo estuário azul, espelhado e sombrio,\nQuanto susto me deu, quanto prazer me dá!\n\nQuantas vezes eu só, nestas manhãs de estio,\nAo vê-lo deslizar, pomposamente, lá,\nPálido não fiquei, tão majestoso vi-o,\nOrgulho do Brasil, glória do Paraná!\n\nCompanheiro ideal! Durante toda a viagem,\nFoi o espelho fiel a refletir a imagem,\nDos mantos e dos céus, discorrendo através\n\nDa floresta, ora assim como um cão veadeiro,\nA fugir, a fugir alegre e alvissareiro,\nOra deitado aqui quase a lamber-me os pés!"
+  },
+  {
+    id: "emiliano-perneta--o-brigue",
+    titulo: "O Brigue",
+    autor: "Emiliano Perneta",
+    pais: "Brasil",
+    seculo: "XIX-XX",
+    corrente: "Simbolismo",
+    aliases: {
+      titulo: ["o brigue", "brigue"],
+      autor: ["emiliano perneta", "emiliano dave perneta"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix-xx", "19", "20"],
+      corrente: ["simbolismo"]
+    },
+    linha1: "Num porto quase estranho, o mar de um morto aspecto,",
+    quarteto: "Num porto quase estranho, o mar de um morto aspecto,\nEsse brigue veleiro, e de formas bizarras,\nFlutua há muito sobre as ondas, inquieto,\nÀ espera, apenas, que lhe afrouxem as amarras...",
+    completo: "Num porto quase estranho, o mar de um morto aspecto,\nEsse brigue veleiro, e de formas bizarras,\nFlutua há muito sobre as ondas, inquieto,\nÀ espera, apenas, que lhe afrouxem as amarras...\n\nNa aparência, a apatia amortece-lhe o esforço;\nSe uma brisa, porém, ao passar, o embalsama\nEi-lo em sonho, a partir, e, então, empina o dorso,\nBamboleia-se, mais gentil do que uma dama...\n\nDentro a maruja acorda ao mínimo ruído,\nDeita velas ao mar, à gávea sonda, o ouvido\nAlerta, o coração batendo, o olhar aceso...\n\nMas a nau continua oscilando, oscilando...\nÉ quando eu poderei, também, partir, é quando?\nEu que não sou da Terra e que à Terra estou preso?"
+  },
+  {
+    id: "amadeu-amaral--tapera",
+    titulo: "Tapera",
+    autor: "Amadeu Amaral",
+    pais: "Brasil",
+    seculo: "XX",
+    corrente: "Pré-modernismo",
+    aliases: {
+      titulo: ["tapera"],
+      autor: ["amadeu amaral", "amadeu ataliba arruda amaral"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xx", "20", "vinte"],
+      corrente: ["pre-modernismo", "premodernismo"]
+    },
+    linha1: "Numa curva da estrada, onde a luz reverbera",
+    quarteto: "Numa curva da estrada, onde a luz reverbera\nNum tanque entre ervaçais, aparece uma casa.\nPombas voejam no oitão, sobre a cumeeira rasa.\nTudo ali tem um ar de quem convida, e espera.",
+    completo: "Numa curva da estrada, onde a luz reverbera\nNum tanque entre ervaçais, aparece uma casa.\nPombas voejam no oitão, sobre a cumeeira rasa.\nTudo ali tem um ar de quem convida, e espera.\n\nSigo. Chego ao pomar: o capim prolifera;\nA guaxima no juá bravo, alta e rija, se casa.\nSilêncio. E, no silêncio, o som mole de uma asa\nE o fremente chiar da cigarra. É a tapera.\n\nBato à porta. Ninguém. Olho por uma fresta:\nTudo escuro; e no escuro, a descer do telhado,\nLongas fitas de sol. Nada mais ali resta.\n\nA velha casa morre. Apenas, sobre as lombas\nDo teto a desabar caminham sem cuidado,\nNos pequeninos pés, turturinando, as pombas."
+  },
+  {
+    id: "amadeu-amaral--rios",
+    titulo: "Rios",
+    autor: "Amadeu Amaral",
+    pais: "Brasil",
+    seculo: "XX",
+    corrente: "Pré-modernismo",
+    aliases: {
+      titulo: ["rios"],
+      autor: ["amadeu amaral", "amadeu ataliba arruda amaral"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xx", "20", "vinte"],
+      corrente: ["pre-modernismo", "premodernismo"]
+    },
+    linha1: "Almas contemplativas! Vão rolando",
+    quarteto: "Almas contemplativas! Vão rolando\nPor esta vida, como os rios quietos...\nRolam os rios, — árvores e tetos,\nCéus e terras, tranqüilos, espelhando;",
+    completo: "Almas contemplativas! Vão rolando\nPor esta vida, como os rios quietos...\nRolam os rios, — árvores e tetos,\nCéus e terras, tranqüilos, espelhando;\n\nVão refletindo todos os aspectos,\nNum serpentear indiferente e brando;\nEsprejuiçam-se, límpidos, cantando,\nNo remanso dos sítios prediletos;\n\nFecundam plantações, movem engenhos,\nDão de beber, sustentam pescadores,\nSuportam barcos e carreiam lenhos...\n\nLá se vão, num rolar manso e tristonho,\nCumprindo o seu destino sem clamores\nE sonhando consigo um grande sonho."
+  },
+  {
+    id: "afonso-celso--13-de-maio-de-1888",
+    titulo: "13 de Maio de 1888",
+    autor: "Afonso Celso",
+    pais: "Brasil",
+    seculo: "XIX-XX",
+    corrente: "Parnasianismo (ufanismo)",
+    aliases: {
+      titulo: ["13 de maio de 1888", "treze de maio"],
+      autor: ["afonso celso", "afonso celso de assis figueiredo junior"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix-xx", "19", "20"],
+      corrente: ["parnasianismo", "ufanismo"]
+    },
+    linha1: "Princesa, em vossa mão de aristocrata,",
+    quarteto: "Princesa, em vossa mão de aristocrata,\nMão de criança, melindrosa e fina,\nEstua a intrepidez adamantina\nQue dos heróis a fábula relata.",
+    completo: "Princesa, em vossa mão de aristocrata,\nMão de criança, melindrosa e fina,\nEstua a intrepidez adamantina\nQue dos heróis a fábula relata.\n\nBendita mão! Angélica, arrebata\nA infância escrava às garras da rapina,\nE a luminosa lei que ela hoje assina\nRaça inteira de mísseros resgata.\n\nAnte iminentes, pavorosas crises,\nNa redentora mão dos infelizes\nNão sei se o cetro ficará, ou não:\n\nMas da história no intérmino cortejo,\nDas gerações o reverente beijo\nSempre tereis, Princesa, n'essa mão!"
+  },
+  {
+    id: "hermes-fontes--a-formiga",
+    titulo: "A Formiga",
+    autor: "Hermes Fontes",
+    pais: "Brasil",
+    seculo: "XX",
+    corrente: "Simbolismo tardio",
+    aliases: {
+      titulo: ["a formiga", "formiga"],
+      autor: ["hermes fontes", "hermes floro bartolomeu martins de araujo fontes"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xx", "20", "vinte"],
+      corrente: ["simbolismo"]
+    },
+    linha1: "E dizer-se que não tens nervos, ó nervosa,",
+    quarteto: "E dizer-se que não tens nervos, ó nervosa,\nÓ vibrátil, sutil, minúscula formiga!\nDizer que não tens alma! E haverá quem o diga,\nSe o teu exemplo toda gente o imita e glosa?!",
+    completo: "E dizer-se que não tens nervos, ó nervosa,\nÓ vibrátil, sutil, minúscula formiga!\nDizer que não tens alma! E haverá quem o diga,\nSe o teu exemplo toda gente o imita e glosa?!\n\nTão pequenina és tu, e, astuta e laboriosa,\nArrastas uma folha — e a arrastada te abriga...\nE o requinte que pões em roer o grão da espiga?\nE a perícia em bordar as pétalas da rosa?\n\nPassas, eu me pergunto onde o melhor motivo:\nSe — Atlas — erguer nas mãos e nos ombros a Esfera,\nSe — formiga — arrastar um ramo nutritivo;\n\nOu — sonhador que a própria angústia retempera —\nDia e noite viver, qual dia e noite vivo,\nAo peso imaterial de uma triste quimera..."
+  },
+  {
+    id: "hermes-fontes--a-pulga",
+    titulo: "A Pulga",
+    autor: "Hermes Fontes",
+    pais: "Brasil",
+    seculo: "XX",
+    corrente: "Simbolismo tardio",
+    aliases: {
+      titulo: ["a pulga", "pulga"],
+      autor: ["hermes fontes", "hermes floro bartolomeu martins de araujo fontes"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xx", "20", "vinte"],
+      corrente: ["simbolismo"]
+    },
+    linha1: "Um sinalzinho preto em teu colo de neve:",
+    quarteto: "Um sinalzinho preto em teu colo de neve:\nExamino se é próprio, ou fingido a nanquim...\nMas o pontinho escuro anima-se; e, ágil, breve,\nSalta aqui, salta ali e vem pousar em mim.",
+    completo: "Um sinalzinho preto em teu colo de neve:\nExamino se é próprio, ou fingido a nanquim...\nMas o pontinho escuro anima-se; e, ágil, breve,\nSalta aqui, salta ali e vem pousar em mim.\n\nSinto-o no corpo: o inseto, a mais e mais se atreve.\nPõe-me um ardor de urtiga em cada poro, e, assim,\nFervo e salto, eu também... Ao seu contacto, leve,\nA epiderme é um incêndio, o sangue é um torvelim.\n\nÉ uma pulga! Tirou-me o bom humor e o agrado!\n— Serena perfeição em que a gente se julga,\nMorre num sopro: é grão de pó, miga qualquer...\n\nQuanto orgulho se tem despido e desmanchado,\nPor um nada, um nadinha, uma pulga!? É que a pulga\nEm astúcia é igual à raposa e à mulher..."
+  },
+  {
+    id: "ronald-de-carvalho--a-resposta-do-homem",
+    titulo: "A Resposta do Homem",
+    autor: "Ronald de Carvalho",
+    pais: "Brasil",
+    seculo: "XX",
+    corrente: "Modernismo",
+    aliases: {
+      titulo: ["a resposta do homem", "resposta do homem"],
+      autor: ["ronald de carvalho"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xx", "20", "vinte"],
+      corrente: ["modernismo"]
+    },
+    linha1: "\"Homem! que queres mais? Dei-te a alegria",
+    quarteto: "\"Homem! que queres mais? Dei-te a alegria\nQue move os mundos harmoniosamente;\nE o céu cheio de estrelas, e a poesia\nDa aurora casta, e a lágrima do poente.\"",
+    completo: "\"Homem! que queres mais? Dei-te a alegria\nQue move os mundos harmoniosamente;\nE o céu cheio de estrelas, e a poesia\nDa aurora casta, e a lágrima do poente.\"\n\n\"Dei-te a floresta espessa, e a pedraria\nLímpida, a água das fontes, transparente,\nE o vinho de ouro, a flor trêmula e fria,\nE o silêncio mais sábio que a serpente...\"\n\n\"Dize, que queres mais? O amor, a glória,\nA força, ainda mais bela que a Beleza,\nA eternidade na hora transitória?\"\n\n\"Que queres mais, se as tuas mãos têm tudo,\nSe é toda tua a imensa Natureza?\"\nE o Homem olhou a terra, e ficou mudo..."
+  },
+  {
+    id: "b-lopes--berco",
+    titulo: "Berço",
+    autor: "B. Lopes",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Simbolismo",
+    aliases: {
+      titulo: ["berco"],
+      autor: ["b lopes", "bernardino lopes", "bernardino da costa lopes"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["simbolismo"]
+    },
+    linha1: "Recordo: um largo verde e uma igrejinha,",
+    quarteto: "Recordo: um largo verde e uma igrejinha,\nUm sino, um rio, um pontilhão e um carro\nDe três juntas bovinas, que ia e vinha\nRinchando alegre, carregando barro.",
+    completo: "Recordo: um largo verde e uma igrejinha,\nUm sino, um rio, um pontilhão e um carro\nDe três juntas bovinas, que ia e vinha\nRinchando alegre, carregando barro.\n\nHavia a escola, que era azul e tinha\nUm mestre mau, de assustador pigarro\n(Meu Deus! que é isto, que emoção a minha\nQuando estas cousas tão singelas narro?)...\n\n\"Seu\" Alexandre, um bom velhinho rico,\nQue hospedara a Princesa; o tico-tico\nQue me acordava de manhã, e a serra...\n\nCom o seu nome de amor Boa-Esperança,\nEis tudo quanto guardo na lembrança\nDa minha pobre e pequenina terra!"
+  },
+  {
+    id: "joao-ribeiro--amor-e-rosas",
+    titulo: "Amor e Rosas",
+    autor: "João Ribeiro",
+    pais: "Brasil",
+    seculo: "XIX-XX",
+    corrente: "Parnasianismo",
+    aliases: {
+      titulo: ["amor e rosas"],
+      autor: ["joao ribeiro", "joao batista ribeiro de andrade fernandes"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix-xx", "19", "20"],
+      corrente: ["parnasianismo"]
+    },
+    linha1: "Um ano agora faz que em minha casa estavas.",
+    quarteto: "Um ano agora faz que em minha casa estavas.\nEm meu pobre jardim rosas brancas havia;\nPor desejá-las, tu nos pés te alevantavas\nPara a rosa colher que mais alto floria.",
+    completo: "Um ano agora faz que em minha casa estavas.\nEm meu pobre jardim rosas brancas havia;\nPor desejá-las, tu nos pés te alevantavas\nPara a rosa colher que mais alto floria.\n\nEmbalde! pois que a tanta altura não chegavas!\nPara ajudar-te fui, e quando o braço erguia\nE erguia a mão buscando a flor que desejavas,\nDo teu olhar gelou-me a constante ironia.\n\nNesse momento, eu tremo, e o galho me escapando\nDispersa pelo espaço as desfolhadas flores,\nQue te vieram cobrir a fronte compungida.\n\n— Não é muito, senhora, (eu te disse) atentando\nQue quem amor nos dá partido em muitas dores\nUma rosa receba em pétalas partida."
+  },
+  {
+    id: "raimundo-correia--mal-secreto",
+    titulo: "Mal Secreto",
+    autor: "Raimundo Correia",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    classico: true,
+    aliases: {
+      titulo: ["mal secreto"],
+      autor: ["raimundo correia", "raimundo da mota de azevedo correia"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "parnasiano"]
+    },
+    linha1: "Se a cólera que espuma, a dor que mora",
+    quarteto: "Se a cólera que espuma, a dor que mora\nN'alma, e destrói cada ilusão que nasce,\nTudo o que punge, tudo o que devora\nO coração, no rosto se estampasse;",
+    completo: "Se a cólera que espuma, a dor que mora\nN'alma, e destrói cada ilusão que nasce,\nTudo o que punge, tudo o que devora\nO coração, no rosto se estampasse;\n\nSe se pudesse, o espírito que chora,\nVer através da máscara da face,\nQuanta gente, talvez, que inveja agora\nNos causa, então piedade nos causasse!\n\nQuanta gente que ri, talvez, consigo\nGuarda um atroz, recôndito inimigo,\nComo invisível chaga cancerosa!\n\nQuanta gente que ri, talvez existe,\nCuja ventura única consiste\nEm parecer aos outros venturosa!"
+  },
+  {
+    id: "olavo-bilac--lingua-portuguesa",
+    titulo: "Língua Portuguesa",
+    autor: "Olavo Bilac",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    classico: true,
+    aliases: {
+      titulo: ["lingua portuguesa"],
+      autor: ["olavo bilac", "bilac"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "parnasiano"]
+    },
+    linha1: "Última flor do Lácio, inculta e bela,",
+    quarteto: "Última flor do Lácio, inculta e bela,\nÉs, a um tempo, esplendor e sepultura:\nOuro nativo, que na ganga impura\nA bruta mina entre os cascalhos vela...",
+    completo: "Última flor do Lácio, inculta e bela,\nÉs, a um tempo, esplendor e sepultura:\nOuro nativo, que na ganga impura\nA bruta mina entre os cascalhos vela...\n\nAmo-te assim, desconhecida e obscura,\nTuba de alto clangor, lira singela,\nQue tens o trom e o silvo da procela,\nE o arrolo da saudade e da ternura!\n\nAmo o teu viço agreste e o teu aroma\nDe virgens selvas e de oceano largo!\nAmo-te, rude e doloroso idioma,\n\nEm que da voz materna ouvi: \"meu filho!\",\nE em que Camões chorou, no exílio amargo,\nO gênio sem ventura e o amor sem brilho!"
+  },
+  {
+    id: "machado-de-assis--a-carolina",
+    titulo: "A Carolina",
+    autor: "Machado de Assis",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Realismo",
+    classico: true,
+    aliases: {
+      titulo: ["a carolina", "carolina"],
+      autor: ["machado de assis", "joaquim maria machado de assis", "machado"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["realismo"]
+    },
+    linha1: "Querida, ao pé do leito derradeiro,",
+    quarteto: "Querida, ao pé do leito derradeiro,\nEm que descansas dessa longa vida,\nAqui venho e virei, pobre querida,\nTrazer-te o coração do companheiro.",
+    completo: "Querida, ao pé do leito derradeiro,\nEm que descansas dessa longa vida,\nAqui venho e virei, pobre querida,\nTrazer-te o coração do companheiro.\n\nPulsa-lhe aquele afeto verdadeiro\nQue, a despeito de toda a humana lida,\nFez a nossa existência apetecida\nE num recanto pôs um mundo inteiro...\n\nTrago-te flores — restos arrancados\nDa terra que nos viu passar unidos\nE ora mortos nos deixa e separados;\n\nQue eu, se tenho nos olhos malferidos\nPensamentos de vida formulados,\nSão pensamentos idos e vividos."
+  },
+  {
+    id: "olavo-bilac--a-um-poeta",
+    titulo: "A um Poeta",
+    autor: "Olavo Bilac",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Parnasianismo",
+    classico: true,
+    aliases: {
+      titulo: ["a um poeta", "um poeta"],
+      autor: ["olavo bilac", "bilac"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["parnasianismo", "parnasiano"]
+    },
+    linha1: "Longe do estéril turbilhão da rua,",
+    quarteto: "Longe do estéril turbilhão da rua,\nBeneditino, escreve! No aconchego\nDo claustro, na paciência e no sossego,\nTrabalha, e teima, e lima, e sofre, e sua!",
+    completo: "Longe do estéril turbilhão da rua,\nBeneditino, escreve! No aconchego\nDo claustro, na paciência e no sossego,\nTrabalha, e teima, e lima, e sofre, e sua!\n\nMas que na forma se disfarce o emprego\nDo esforço; e a trama viva se construa\nDe tal modo, que a imagem fique nua,\nRica mas sóbria, como um templo grego.\n\nNão se mostre na fábrica o suplício\nDo mestre. E, natural, o efeito agrade,\nSem lembrar os andaimes do edifício:\n\nPorque a Beleza, gêmea da Verdade,\nArte pura, inimiga do artifício,\nÉ a força e a graça na simplicidade."
+  },
+  {
+    id: "narcisa-amalia--perfil-de-escrava",
+    titulo: "Perfil de Escrava",
+    autor: "Narcisa Amália",
+    pais: "Brasil",
+    seculo: "XIX",
+    corrente: "Romantismo",
+    autora: true,
+    aliases: {
+      titulo: ["perfil de escrava"],
+      autor: ["narcisa amalia", "narcisa amalia de campos"],
+      pais: ["brasil", "brasileiro", "brasileira"],
+      seculo: ["xix", "19", "dezenove"],
+      corrente: ["romantismo"]
+    },
+    linha1: "Quando os olhos entreabro à luz que avança,",
+    quarteto: "Quando os olhos entreabro à luz que avança,\nBatendo a sombra e pérfida indolência,\nVejo além da discreta transparência\nDo alvo cortinado uma criança.",
+    completo: "Quando os olhos entreabro à luz que avança,\nBatendo a sombra e pérfida indolência,\nVejo além da discreta transparência\nDo alvo cortinado uma criança.\n\nPupila de gazela - viva e mansa,\nCom sereno temor colhendo a ardência\nFronte imersa em palor...Rir de inocência,\nRir que trai ora angústia, ora esperança...\n\nEis o esboço fugaz da estátua viva,\nQue - de braços em cruz - na sombra avulta\nSilenciosa, atenta, pensativa!\n\nEstátua? Não, que essa cadeia estulta\nHá de quebrar-se, mísera, cativa,\nEste afeto de mãe, que a dona oculta!"
+  },
+  {
+    id: "florbela-espanca--eu",
+    titulo: "Eu...",
+    autor: "Florbela Espanca",
+    pais: "Portugal",
+    seculo: "XIX-XX",
+    corrente: "Romantismo (Neorromantismo)",
+    autora: true,
+    aliases: {
+      titulo: ["eu"],
+      autor: ["florbela espanca", "flor bela de alma da conceicao espanca"],
+      pais: ["portugal", "portugues", "portuguesa"],
+      seculo: ["xix-xx", "19", "20", "xix", "xx"],
+      corrente: ["romantismo", "neorromantismo"]
+    },
+    linha1: "Eu sou a que no mundo anda perdida,",
+    quarteto: "Eu sou a que no mundo anda perdida,\nEu sou a que na vida não tem norte,\nSou a irmã do Sonho, e desta sorte\nSou a crucificada... a dolorida...",
+    completo: "Eu sou a que no mundo anda perdida,\nEu sou a que na vida não tem norte,\nSou a irmã do Sonho, e desta sorte\nSou a crucificada... a dolorida...\n\nSombra de névoa tênue e esvaecida,\nE que o destino amargo, triste e forte,\nImpele brutalmente para a morte!\nAlma de luto sempre incompreendida!...\n\nSou aquela que passa e ninguém vê...\nSou a que chamam triste sem o ser...\nSou a que chora sem saber por quê...\n\nSou talvez a visão que alguém sonhou.\nAlguém que veio ao mundo pra me ver,\nE que nunca na vida me encontrou!"
+  },
+  {
+    id: "marquesa-de-alorna--se-me-aparto-de-ti-deus-da-bondade",
+    titulo: "Se me Aparto de Ti, Deus da Bondade",
+    autor: "Marquesa de Alorna",
+    pais: "Portugal",
+    seculo: "XVIII",
+    corrente: "Arcadismo (transição ao Romantismo)",
+    autora: true,
+    aliases: {
+      titulo: ["se me aparto de ti deus da bondade"],
+      autor: ["marquesa de alorna", "leonor de almeida portugal", "alcipe"],
+      pais: ["portugal", "portugues", "portuguesa"],
+      seculo: ["xviii", "18", "dezoito"],
+      corrente: ["arcadismo", "romantismo"]
+    },
+    linha1: "Se me aparto de ti, Deus da bondade,",
+    quarteto: "Se me aparto de ti, Deus da bondade,\nQue ausência tão cruel! Como é possível\nQue me leve a um abismo tão terrível\nO pendor infeliz da humanidade!",
+    completo: "Se me aparto de ti, Deus da bondade,\nQue ausência tão cruel! Como é possível\nQue me leve a um abismo tão terrível\nO pendor infeliz da humanidade!\n\nConforta-me, Senhor, que esta saudade\nMe despedaça o coração sensível;\nSe a teus olhos na cruz sou desprezível,\nNão olhes para a minha iniquidade!\n\nÀ suave esperança me entregaste,\nE o preço de teu sangue precioso\nMe afiança que não me abandonaste.\n\nSe, justo, castigar-me te é forçoso,\nLembra-te que te amei, e me criaste\nPara habitar contigo o Céu lustroso!"
+  },
+  {
+    id: "violante-do-ceu--vida-que-nao-acaba-de-acabar-se",
+    titulo: "Vida que Não Acaba de Acabar-se",
+    autor: "Violante do Céu",
+    pais: "Portugal",
+    seculo: "XVII",
+    corrente: "Barroco",
+    autora: true,
+    aliases: {
+      titulo: ["vida que nao acaba de acabar se"],
+      autor: ["violante do ceu", "violante do ceu"],
+      pais: ["portugal", "portugues", "portuguesa"],
+      seculo: ["xvii", "17", "dezessete"],
+      corrente: ["barroco"]
+    },
+    linha1: "Vida que não acaba de acabar-se,",
+    quarteto: "Vida que não acaba de acabar-se,\nChegando já de vós a despedir-se,\nOu deixa, por sentida, de sentir-se,\nOu pode de imortal acreditar-se.",
+    completo: "Vida que não acaba de acabar-se,\nChegando já de vós a despedir-se,\nOu deixa, por sentida, de sentir-se,\nOu pode de imortal acreditar-se.\n\nVida que já não chega a terminar-se,\nPois chega já de vós a dividir-se,\nOu procura, vivendo, consumir-se,\nOu pretende, matando, eternizar-se.\n\nO certo é, Senhor, que não fenece,\nAntes no que padece se reporta,\nPor que não se limite o que padece.\n\nMas viver entre lágrimas, que importa\nSe vida que entre ausência permanece\nÉ só viva ao pesar, ao gosto morta?"
+  },
+];
+
+function normalize(s) {
+  // Separadores como hífen, barra e vírgula viram espaço (não são simplesmente
+  // removidos), para que "Parnasianismo/Pré-modernismo" normalize igual a
+  // "parnasianismo pre modernismo" em vez de colar as palavras vizinhas
+  // ("parnasianismopre"). Sem isso, o valor exibido de campos compostos
+  // (corrente com barra, século com hífen) não batia nem consigo mesmo.
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[-/,]/g, " ")
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenize(s) {
+  return normalize(s).split(/\s+/).filter(Boolean);
+}
+
+// Escapa apenas os caracteres com significado em HTML, preservando as
+// quebras de linha reais do poema — o CSS (white-space: pre-line) já sabe
+// transformá-las em quebras visuais, igual ao trecho mostrado durante o jogo.
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Distância de Levenshtein (nº mínimo de inserções/remoções/trocas de letra
+// para transformar uma palavra na outra). Usada só como fallback de erro de
+// digitação — nunca substitui a checagem exata, que roda primeiro.
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const dp = new Array(n + 1);
+  for (let j = 0; j <= n; j++) dp[j] = j;
+  for (let i = 1; i <= m; i++) {
+    let prev = dp[0];
+    dp[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const temp = dp[j];
+      dp[j] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[j], dp[j - 1]);
+      prev = temp;
+    }
+  }
+  return dp[n];
+}
+
+// Quantas letras erradas tolerar, de acordo com o tamanho da palavra.
+// Palavras curtas (<=4) exigem exatidão (evita "de" bater com "da"); palavras
+// médias (5-8, a maioria dos nomes) toleram 1 letra errada — o equivalente a
+// uns 85-90% de acerto, o que já cobre erros de digitação comuns como
+// "correa" por "correia" ou "mchado" por "machado". Palavras longas (9+)
+// toleram 2 letras.
+function maxAllowedEdits(len) {
+  if (len <= 4) return 0;
+  if (len <= 8) return 1;
+  return 2;
+}
+
+function closeEnough(a, b) {
+  if (a === b) return true;
+  const longer = Math.max(a.length, b.length);
+  const allowed = maxAllowedEdits(longer);
+  if (allowed === 0) return false;
+  if (Math.abs(a.length - b.length) > allowed) return false;
+  return levenshtein(a, b) <= allowed;
+}
+
+// Whole-word matching: a guess only counts if it matches a complete token
+// (or the full phrase) of an alias — never a loose substring. This stops
+// single letters or fragments (e.g. "a") from falsely matching everything.
+function matchesAlias(guessRaw, aliasList) {
+  const guessNorm = normalize(guessRaw);
+  if (!guessNorm) return false;
+  const guessTokens = tokenize(guessRaw);
+
+  for (const aliasRaw of aliasList) {
+    const aliasNorm = normalize(aliasRaw);
+    const aliasTokens = aliasNorm.split(/\s+/).filter(Boolean);
+
+    // Exact full-string match (e.g. "as pombas" === "as pombas")
+    if (guessNorm === aliasNorm) return true;
+
+    // Multi-word guess appearing as a contiguous phrase inside a multi-word alias
+    if (guessTokens.length > 1 && aliasTokens.length > 1) {
+      if (aliasNorm.includes(guessNorm) && guessNorm.length >= 4) return true;
+    }
+
+    // Single-word guess must equal one whole token of the alias — not a substring of it.
+    // Digits (century numbers like "16") are allowed at any length; other words need 3+ letters
+    // so short fragments ("a", "de", "um") can never register as a match.
+    if (guessTokens.length === 1) {
+      const g = guessTokens[0];
+      const isDigits = /^\d+$/.test(g);
+      if ((isDigits || g.length >= 3) && aliasTokens.includes(g)) return true;
+    }
+
+    // Single-word alias fully present as one of the guess's tokens (e.g. guess "poeta camoes")
+    if (aliasTokens.length === 1) {
+      const al = aliasTokens[0];
+      const isDigits = /^\d+$/.test(al);
+      if ((isDigits || al.length >= 3) && guessTokens.includes(al)) return true;
+    }
+
+    // ---- Fallback tolerante a erro de digitação (só roda se nada exato bateu) ----
+    // Frase com 2+ palavras dos dois lados: cada palavra "significativa" (3+
+    // letras) do palpite precisa ter uma correspondente próxima no alias, e
+    // vice-versa. Cobre casos como "raimundo correa" para "Raimundo Correia".
+    if (guessTokens.length > 1 && aliasTokens.length > 1) {
+      const guessSig = guessTokens.filter((t) => t.length >= 3);
+      const aliasSig = aliasTokens.filter((t) => t.length >= 3);
+      if (guessSig.length > 0 && aliasSig.length > 0) {
+        const guessCovered = guessSig.every((gt) => aliasSig.some((at) => closeEnough(gt, at)));
+        const aliasCovered = aliasSig.every((at) => guessSig.some((gt) => closeEnough(gt, at)));
+        if (guessCovered && aliasCovered) return true;
+      }
+    }
+
+    // Palpite de uma palavra só, com erro de digitação, contra um token do alias.
+    if (guessTokens.length === 1 && guessTokens[0].length >= 4) {
+      if (aliasTokens.some((at) => closeEnough(guessTokens[0], at))) return true;
+    }
+
+    // Alias de uma palavra só, com erro de digitação, contra um dos tokens do palpite.
+    if (aliasTokens.length === 1 && aliasTokens[0].length >= 4) {
+      if (guessTokens.some((gt) => closeEnough(gt, aliasTokens[0]))) return true;
+    }
+  }
+  return false;
+}
+
+const mainKeys = ["autor", "pais", "seculo"];
+const bonusKeys = ["titulo", "corrente"];
+const allKeys = [...mainKeys, ...bonusKeys];
+const fieldMeta = {
+  autor: { label: "Autor" },
+  pais: { label: "País" },
+  seculo: { label: "Século" },
+  titulo: { label: "Título" },
+  corrente: { label: "Corrente" }
+};
+
+// ---- Explicações de corrente literária ----------------------------------
+// Protótipo pedagógico: resumos curtos, em linguagem simples, parafraseados
+// a partir de caracterizações gerais e amplamente aceitas de cada movimento
+// (não copiados de nenhuma fonte específica). Pensados para revisão futura
+// por especialista antes de virarem conteúdo definitivo.
+//
+// getCorrenteInfo() escolhe, para um rótulo de corrente possivelmente
+// composto (ex: "Parnasianismo/Pré-modernismo"), a entrada cuja palavra-chave
+// aparece mais à esquerda no texto — ou seja, a que foi listada primeiro,
+// tratada como a designação principal.
+const CORRENTE_INFO = [
+  { key: "barroco", nome: "Barroco",
+    texto: "O Barroco (século XVII) nasce do conflito entre o prazer terreno e a culpa religiosa, entre razão e fé. Sua marca é o exagero: jogos de opostos (antíteses), metáforas rebuscadas e um vocabulário difícil, tomado por referências à morte e à fugacidade da vida. No Brasil colonial, Gregório de Matos é o nome mais lembrado do movimento." },
+  { key: "arcadismo", nome: "Arcadismo",
+    texto: "O Arcadismo (século XVIII) reage ao exagero barroco buscando simplicidade e equilíbrio. Os poetas se imaginam pastores vivendo em cenários bucólicos idealizados, longe da vida urbana — adotar um pseudônimo pastoril (como o \"Glauceste Saturnio\" de Cláudio Manuel da Costa) era quase obrigatório. No Brasil, floresceu em Minas Gerais, entre poetas ligados à Inconfidência Mineira." },
+  { key: "petrarquismo", nome: "Humanismo (Petrarquismo)",
+    texto: "O Petrarquismo (a partir do século XIV, com Francesco Petrarca) lança as bases do soneto amoroso moderno: o poeta idealiza uma amada inatingível e transforma o sofrimento do amor não correspondido em contemplação poética refinada. Sua influência atravessa séculos e chega aos sonetistas renascentistas de Portugal e da França." },
+  { key: "humanismo", nome: "Humanismo (Petrarquismo)",
+    texto: "O Petrarquismo (a partir do século XIV, com Francesco Petrarca) lança as bases do soneto amoroso moderno: o poeta idealiza uma amada inatingível e transforma o sofrimento do amor não correspondido em contemplação poética refinada. Sua influência atravessa séculos e chega aos sonetistas renascentistas de Portugal e da França." },
+  { key: "pleiade", nome: "Pléiade (Renascimento francês)",
+    texto: "A Pléiade foi um grupo de poetas franceses do século XVI, liderado por Pierre de Ronsard, que buscou elevar a língua francesa ao nível do latim e do grego clássicos — escrevendo sonetos de amor refinados sob forte influência petrarquista." },
+  { key: "classicismo", nome: "Classicismo / Renascimento",
+    texto: "O Classicismo renascentista (século XVI) busca equilíbrio, harmonia e imitação dos modelos greco-latinos. O amor é tratado de forma idealizada e platônica, e a forma rígida e disciplinada do soneto reflete o próprio ideal de ordem racional do período. Camões é o nome maior em língua portuguesa." },
+  { key: "renascimento", nome: "Renascimento",
+    texto: "O Renascimento (séculos XV-XVI) resgata os ideais de proporção, razão e beleza da Antiguidade clássica. Na Inglaterra, Shakespeare adapta o soneto italiano a um esquema de rimas próprio, tratando o amor, a beleza e a passagem do tempo com grande virtuosismo formal." },
+  { key: "romantismo", nome: "Romantismo",
+    texto: "O Romantismo (século XIX) valoriza a emoção, a subjetividade e a liberdade criativa acima da razão e das regras clássicas. No Brasil, ganha forte tom nacionalista (o índio como herói, a natureza como símbolo do país) e, em sua fase mais extrema — o Ultrarromantismo —, mergulha na melancolia e no culto à morte." },
+  { key: "realismo", nome: "Realismo",
+    texto: "O Realismo (final do século XIX) rejeita a idealização romântica em favor de uma observação mais crítica e desiludida da vida em sociedade. O tom costuma ser analítico, às vezes irônico, tratando as emoções com distanciamento racional em vez de efusão sentimental. Machado de Assis é o nome maior do movimento no Brasil." },
+  { key: "parnasianismo", nome: "Parnasianismo",
+    texto: "O Parnasianismo (final do século XIX) prega a \"arte pela arte\": a forma perfeita importa mais que a emoção pessoal do poeta. Métrica rigorosa, rimas ricas, vocabulário erudito e comparações com objetos de arte — mármore, vasos gregos, metais preciosos — são suas marcas registradas." },
+  { key: "pre modernismo", nome: "Pré-modernismo",
+    texto: "O Pré-modernismo (transição entre os séculos XIX e XX) não é bem um movimento único, mas um momento de transição sem estética própria — poetas que já não se encaixam no Parnasianismo ou no Simbolismo, mas ainda não chegaram às rupturas do Modernismo. Costuma misturar angústia existencial, crítica social e experimentação de linguagem." },
+  { key: "proto modernismo", nome: "Pré-modernismo",
+    texto: "O Pré-modernismo (transição entre os séculos XIX e XX) não é bem um movimento único, mas um momento de transição sem estética própria — poetas que já não se encaixam no Parnasianismo ou no Simbolismo, mas ainda não chegaram às rupturas do Modernismo. Costuma misturar angústia existencial, crítica social e experimentação de linguagem." },
+  { key: "pos simbolismo", nome: "Pós-simbolismo",
+    texto: "O Pós-simbolismo (início do século XX) herda a musicalidade e o refinamento do Simbolismo, mas com maior clareza racional e serenidade filosófica — uma ponte entre o século XIX e as rupturas do Modernismo que viriam a seguir." },
+  { key: "simbolismo", nome: "Simbolismo",
+    texto: "O Simbolismo (final do século XIX) reage ao formalismo frio do Parnasianismo buscando sugestão em vez de descrição direta. Musicalidade, sinestesia (misturar sentidos, como \"cor que soa\"), misticismo e uma atmosfera de sonho ou morte são características centrais." },
+  { key: "modernismo", nome: "Modernismo",
+    texto: "O Modernismo (a partir de 1922, no Brasil) rompe com as formas fixas e o vocabulário rebuscado da tradição anterior, buscando liberdade formal e valorizando a língua brasileira falada no dia a dia — muitas vezes com espírito crítico e nacionalista." }
+];
+
+function getCorrenteInfo(correnteRaw) {
+  const norm = normalize(correnteRaw);
+  let best = null;
+  let bestIdx = Infinity;
+  CORRENTE_INFO.forEach((entry) => {
+    const idx = norm.indexOf(entry.key);
+    if (idx !== -1 && idx < bestIdx) {
+      bestIdx = idx;
+      best = entry;
+    }
+  });
+  return best;
+}
+
+// ---- Persistência (Arquivo) ----------------------------------------------
+// Guarda, por soneto e por campo, se aquele campo já foi ACERTADO (não
+// apenas revelado por dica ou desistência) em algum jogo já disputado.
+// Usa o armazenamento persistente dos artefatos do Claude quando disponível;
+// se o arquivo for aberto fora desse ambiente (ex: salvo localmente sem o
+// suporte do artefato), o jogo continua funcionando normalmente, só sem
+// memória entre sessões.
+let discoveryData = {};
+let discoveryLoaded = false;
+const DISCOVERY_STORAGE_KEY = "adivinhe-o-soneto:discovered-fields";
+
+function mergeIntoDiscoveryData(loaded) {
+  Object.keys(loaded).forEach((sonnetId) => {
+    if (!discoveryData[sonnetId]) discoveryData[sonnetId] = {};
+    Object.keys(loaded[sonnetId]).forEach((field) => {
+      if (loaded[sonnetId][field]) discoveryData[sonnetId][field] = true;
+    });
+  });
+}
+
+// localStorage é síncrono e funciona em qualquer contexto (arquivo local,
+// artefato, site hospedado) — é a fonte de verdade. window.storage (só
+// existe dentro do artefato do Claude) é sincronizado por cima, se disponível,
+// sem bloquear nem depender dele.
+function loadDiscoveryData() {
+  try {
+    const raw = localStorage.getItem(DISCOVERY_STORAGE_KEY);
+    if (raw) mergeIntoDiscoveryData(JSON.parse(raw));
+  } catch (e) {
+    // localStorage indisponível (ex: aba anônima bloqueando) — segue sem persistência local
+  }
+  discoveryLoaded = true;
+  if (window.storage) {
+    window.storage
+      .get("discovered-fields", false)
+      .then((result) => {
+        if (result && result.value) {
+          mergeIntoDiscoveryData(JSON.parse(result.value));
+          saveDiscoveryData();
+        }
+      })
+      .catch(() => {});
+  }
+}
+
+function saveDiscoveryData() {
+  try {
+    localStorage.setItem(DISCOVERY_STORAGE_KEY, JSON.stringify(discoveryData));
+  } catch (e) {
+    // falha de armazenamento não deve travar o jogo
+  }
+  if (window.storage) {
+    try {
+      const result = window.storage.set("discovered-fields", JSON.stringify(discoveryData), false);
+      if (result && typeof result.catch === "function") result.catch(() => {});
+    } catch (e) {}
+  }
+}
+
+function markDiscovered(sonnetId, field) {
+  if (!discoveryData[sonnetId]) discoveryData[sonnetId] = {};
+  if (discoveryData[sonnetId][field]) return;
+  discoveryData[sonnetId][field] = true;
+  saveDiscoveryData();
+}
+
+function discoveredFieldsOf(sonnetId) {
+  return discoveryData[sonnetId] || {};
+}
+
+function isFullyDiscovered(sonnetId) {
+  const d = discoveredFieldsOf(sonnetId);
+  return allKeys.every((k) => d[k]);
+}
+
+function discoveredCountOf(sonnetId) {
+  const d = discoveredFieldsOf(sonnetId);
+  return allKeys.filter((k) => d[k]).length;
+}
+
+const BONUS_PTS = 30;
+const ROUNDS_PER_GAME = 8;
+
+// Total de pontos disponível para as "provas principais" de uma rodada,
+// dividido igualmente entre os campos que de fato precisam ser adivinhados.
+// No modo Teste (autor + país + século) cada um vale 100 (300/3). Nos modos
+// só de literatura brasileira, país já vem preenchido de graça — não faz
+// sentido pedir a nacionalidade quando ela é sempre "Brasil" — então os 100
+// pontos que seriam dele são redistribuídos entre autor e século (300/2 =
+// 150 cada), mantendo o total de pontos principais por rodada equivalente.
+const MAIN_POOL_POINTS = 300;
+
+function isPaisPrefilled(mode) {
+  return mode === "brasil" || mode === "classicos";
+}
+
+function mainFieldBase(mode) {
+  const activeCount = isPaisPrefilled(mode) ? mainKeys.length - 1 : mainKeys.length;
+  return Math.round(MAIN_POOL_POINTS / activeCount);
+}
+
+// Tentativas máximas por rodada: a cada erro, uma pista (bônus ou principal)
+// é liberada automaticamente, na ordem abaixo. Isso garante que, mesmo que o
+// jogador nunca acerte nada, todos os campos principais acabam revelados —
+// ninguém fica preso precisando usar "Revelar e pular".
+const MAX_ATTEMPTS = 6;
+const revealSchedule = [
+  { at: 2, key: "titulo" },   // pista bônus liberada cedo
+  { at: 3, key: "pais" },     // primeira pista principal (nos modos onde país não vem pronto)
+  { at: 4, key: "corrente" }, // segunda pista bônus
+  { at: 5, key: "seculo" },   // segunda pista principal
+  { at: 6, key: "autor" }     // última pista principal — a essa altura tudo já foi revelado
+];
+
+let order = [];
+let roundIdx = 0;
+let score = 0;
+let missCount = 0;
+let textStage = 0;
+let state = {};
+let currentMode = "geral";
+let pace = "casual"; // "casual" | "facil" | "medio" | "dificil"
+let pendingMode = "geral"; // expediente escolhido na 1ª tela, aplicado ao startGame após o ritmo
+let timerInterval = null;
+let timeRemaining = 0;
+
+// Segundos disponíveis por soneto em cada dificuldade do modo Desafio.
+// O cronômetro é por rodada (não pela partida inteira): cada soneto novo
+// reinicia o relógio, então travar numa rodada não compromete as seguintes.
+const CHALLENGE_SECONDS = { facil: 90, medio: 60, dificil: 35 };
+
+const MODE_LABELS = { geral: "Teste", brasil: "Literatura Brasileira (Geral)", classicos: "Literatura Brasileira (Clássicos)", feminina: "Literatura Feminina" };
+
+// ---- Tutorial (Guia do detetive) ------------------------------------------
+// Carrossel estático de 6 páginas. Os mockups reaproveitam as MESMAS classes
+// visuais do jogo real (evidence-card, badge, fragment, mode-card etc.), mas
+// como <div>s inertes (nunca <button>), com pointer-events:none no wrapper —
+// parecem idênticas ao jogo de verdade, mas nunca respondem a clique, então
+// não podem ser confundidas com controles reais. Números citados no texto
+// vêm das MESMAS constantes usadas pela lógica do jogo (MAIN_POOL_POINTS,
+// BONUS_PTS, MAX_ATTEMPTS, CHALLENGE_SECONDS) — se algum valor mudar no
+// futuro, o texto do tutorial se atualiza sozinho, sem risco de ficar
+// desatualizado silenciosamente.
+function tutorialSteps() {
+  const pontosPrincipal = Math.round(MAIN_POOL_POINTS / mainKeys.length);
+  return [
+    {
+      titulo: "A missão",
+      corpo:
+        "Cada rodada mostra um fragmento real de um soneto de domínio público. Sua missão é descobrir quem escreveu, de onde, de quando, e a que corrente literária ele pertence — só com pistas do próprio texto. Digite qualquer palpite na caixa abaixo, em qualquer ordem.",
+      mockup:
+        '<div class="fragment" style="margin-bottom:0;"><div class="fragment-text">Amor é fogo que arde sem se ver,\nÉ ferida que dói e não se sente;</div></div>'
+    },
+    {
+      titulo: "As pistas",
+      corpo:
+        "São 5 campos: autor, país e século são as provas principais, cada uma valendo até " +
+        pontosPrincipal +
+        " pontos (esse valor cai conforme você erra). Título e corrente literária são pistas bônus, sempre valendo " +
+        BONUS_PTS +
+        " pontos fixos quando acertadas.",
+      mockup:
+        '<div class="card-grid" style="margin-bottom:0;">' +
+        '<div class="evidence-card"><div class="badge stamp">CERTO</div><div class="field-label">Autor</div><span class="field-value">Luís de Camões</span></div>' +
+        '<div class="evidence-card"><div class="field-label">País</div><span class="field-value unknown">?</span></div>' +
+        '<div class="evidence-card bonus"><div class="field-label">Corrente</div><span class="field-value unknown">?</span></div>' +
+        "</div>"
+    },
+    {
+      titulo: "Quando você erra",
+      corpo:
+        "Cada erro revela mais texto do poema e conta como uma tentativa (o limite é " +
+        MAX_ATTEMPTS +
+        " por rodada). Ao longo dessas tentativas, o próprio jogo libera pistas automaticamente — ninguém fica travado numa rodada para sempre. Se quiser, também dá pra desistir a qualquer momento com \"Revelar e pular\".",
+      mockup:
+        '<div class="card-grid" style="margin-bottom:0;">' +
+        '<div class="evidence-card"><div class="badge hint">pista</div><div class="field-label">Século</div><span class="field-value">XVI</span></div>' +
+        '<div class="evidence-card"><div class="field-label">Autor</div><span class="field-value unknown">?</span></div>' +
+        "</div>" +
+        '<p style="font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top:10px;">Tentativas 2/' +
+        MAX_ATTEMPTS +
+        "</p>"
+    },
+    {
+      titulo: "Expedientes e ritmo",
+      corpo:
+        "Escolha entre 4 bancos de sonetos: Teste (tudo), Literatura Brasileira Geral, só os Clássicos mais consagrados, ou Literatura Feminina — nos modos brasileiros, o país já vem preenchido de graça (todo soneto ali é do Brasil). Depois, escolha o ritmo: Casual (sem pressa) ou Desafio, com cronômetro por soneto (" +
+        CHALLENGE_SECONDS.facil +
+        "s / " +
+        CHALLENGE_SECONDS.medio +
+        "s / " +
+        CHALLENGE_SECONDS.dificil +
+        "s conforme a dificuldade).",
+      mockup:
+        '<div class="mode-list" style="margin-bottom:0;">' +
+        '<div class="mode-card"><span class="mode-card-title">Literatura Brasileira (Geral)</span><span class="mode-card-desc">País já vem preenchido — os pontos vão todos pra autor e século.</span></div>' +
+        '<div class="mode-card"><span class="mode-card-title">Desafio: Médio</span><span class="mode-card-desc">' +
+        CHALLENGE_SECONDS.medio +
+        ' segundos por soneto.</span></div>' +
+        "</div>"
+    },
+    {
+      titulo: "O Arquivo",
+      corpo:
+        "É a sua biblioteca pessoal: mostra todos os sonetos do banco, cada um bloqueado, parcialmente revelado, ou completo, dependendo do que você já acertou em partidas passadas — e fica salvo entre sessões. Só conta o que foi acertado de verdade: dicas, desistências e o país de graça nunca contam como descoberto.",
+      mockup:
+        '<div class="arquivo-grid" style="margin-bottom:0; max-height:none;">' +
+        '<div class="arquivo-card locked"><div class="arquivo-card-status">\u{1F512} não descoberto</div><div class="arquivo-card-title">?????</div><div class="arquivo-card-sub">Autor desconhecido</div></div>' +
+        '<div class="arquivo-card partial"><div class="arquivo-card-status">\u25CF 2 de 5 campos</div><div class="arquivo-card-title">?????</div><div class="arquivo-card-sub">Raimundo Correia</div></div>' +
+        '<div class="arquivo-card complete"><div class="arquivo-card-status">\u2713 completo</div><div class="arquivo-card-title">Via Láctea</div><div class="arquivo-card-sub">Olavo Bilac</div></div>' +
+        "</div>"
+    },
+    {
+      titulo: "Pronto",
+      corpo: "É isso. Leia o fragmento, siga as pistas, e descubra o soneto. Boa investigação, detetive.",
+      mockup: '<div class="seal-lg" style="margin:0 auto;">&#10003;</div>'
+    }
+  ];
+}
+
+let tutorialStep = 0;
+const TUTORIAL_SEEN_KEY = "adivinhe-o-soneto:tutorial-seen";
+
+function renderTutorialStep() {
+  const steps = tutorialSteps();
+  const step = steps[tutorialStep];
+  tutorialTitleEl.textContent = step.titulo;
+  tutorialTaglineEl.textContent = "como jogar";
+  tutorialProgressEl.textContent = tutorialStep + 1 + " de " + steps.length;
+  tutorialMockupEl.innerHTML = '<div class="tutorial-mockup">' + step.mockup + "</div>";
+  tutorialBodyEl.textContent = step.corpo;
+  tutorialBackBtn.disabled = tutorialStep === 0;
+  tutorialNextBtn.textContent = tutorialStep === steps.length - 1 ? "Entendi, vamos investigar" : "Próximo";
+}
+
+function markTutorialSeen() {
+  try {
+    localStorage.setItem(TUTORIAL_SEEN_KEY, "1");
+  } catch (e) {}
+}
+
+function hasTutorialBeenSeen() {
+  try {
+    return localStorage.getItem(TUTORIAL_SEEN_KEY) === "1";
+  } catch (e) {
+    return true; // sem localStorage, não insiste em abrir sozinho
+  }
+}
+
+function openTutorial() {
+  tutorialStep = 0;
+  renderTutorialStep();
+  showView(viewTutorial);
+}
+
+function finishTutorial() {
+  markTutorialSeen();
+  showView(viewStart);
+}
+
+const viewStart = document.getElementById("view-start");
+const viewPace = document.getElementById("view-pace");
+const viewModes = document.getElementById("view-modes");
+const viewGame = document.getElementById("view-game");
+const viewEnd = document.getElementById("view-end");
+const viewArquivo = document.getElementById("view-arquivo");
+const viewTutorial = document.getElementById("view-tutorial");
+
+const mainTargetsEl = document.getElementById("main-targets");
+const bonusTargetsEl = document.getElementById("bonus-targets");
+const excerptEl = document.getElementById("excerpt");
+const feedbackEl = document.getElementById("feedback");
+const scoreEl = document.getElementById("score");
+const roundNumEl = document.getElementById("round-num");
+const roundTotalEl = document.getElementById("round-total");
+const attemptsCountEl = document.getElementById("attempts-count");
+const attemptsMaxEl = document.getElementById("attempts-max");
+const timerTagEl = document.getElementById("timer-tag");
+const timerValueEl = document.getElementById("timer-value");
+const modeTagEl = document.getElementById("mode-tag");
+const input = document.getElementById("guess-input");
+const guessBtn = document.getElementById("guess-btn");
+const giveupBtn = document.getElementById("giveup-btn");
+const quitBtn = document.getElementById("quit-btn");
+const nextWrap = document.getElementById("next-wrap");
+const nextBtn = document.getElementById("next-btn");
+const startBtn = document.getElementById("start-btn");
+const paceCasualBtn = document.getElementById("pace-casual-btn");
+const paceFacilBtn = document.getElementById("pace-facil-btn");
+const paceMedioBtn = document.getElementById("pace-medio-btn");
+const paceDificilBtn = document.getElementById("pace-dificil-btn");
+const paceBackBtn = document.getElementById("pace-back-btn");
+const modeGeralBtn = document.getElementById("mode-geral-btn");
+const modeBrasilBtn = document.getElementById("mode-brasil-btn");
+const modeClassicosBtn = document.getElementById("mode-classicos-btn");
+const modeFemininaBtn = document.getElementById("mode-feminina-btn");
+const modesBackBtn = document.getElementById("modes-back-btn");
+const playAgainBtn = document.getElementById("playagain-btn");
+const homeBtn = document.getElementById("home-btn");
+const exitBtn = document.getElementById("exit-btn");
+const reopenBtn = document.getElementById("reopen-btn");
+const endContent = document.getElementById("end-content");
+const exitContent = document.getElementById("exit-content");
+const finalScoreValueEl = document.getElementById("final-score-value");
+const finalMsgEl = document.getElementById("final-msg");
+const arquivoBtn = document.getElementById("arquivo-btn");
+const arquivoBackBtn = document.getElementById("arquivo-back-btn");
+const arquivoDetailBackBtn = document.getElementById("arquivo-detail-back-btn");
+const arquivoGridWrap = document.getElementById("arquivo-grid-wrap");
+const arquivoDetailEl = document.getElementById("arquivo-detail");
+const arquivoGridEl = document.getElementById("arquivo-grid");
+const arquivoProgressEl = document.getElementById("arquivo-progress");
+const arquivoDetailBodyEl = document.getElementById("arquivo-detail-body");
+const tutorialBtn = document.getElementById("tutorial-btn");
+const tutorialTitleEl = document.getElementById("tutorial-title");
+const tutorialTaglineEl = document.getElementById("tutorial-tagline");
+const tutorialProgressEl = document.getElementById("tutorial-progress");
+const tutorialMockupEl = document.getElementById("tutorial-mockup");
+const tutorialBodyEl = document.getElementById("tutorial-body");
+const tutorialNextBtn = document.getElementById("tutorial-next-btn");
+const tutorialBackBtn = document.getElementById("tutorial-back-btn");
+const tutorialSkipBtn = document.getElementById("tutorial-skip-btn");
+
+function showView(view) {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  viewStart.classList.add("hidden");
+  viewPace.classList.add("hidden");
+  viewModes.classList.add("hidden");
+  viewGame.classList.add("hidden");
+  viewEnd.classList.add("hidden");
+  viewArquivo.classList.add("hidden");
+  viewTutorial.classList.add("hidden");
+  view.classList.remove("hidden");
+}
+
+function buildOrder(mode) {
+  let pool = [...sonnets.keys()];
+  if (mode === "brasil") {
+    pool = pool.filter((i) => sonnets[i].pais === "Brasil");
+  } else if (mode === "classicos") {
+    pool = pool.filter((i) => sonnets[i].pais === "Brasil" && sonnets[i].classico === true);
+  } else if (mode === "feminina") {
+    pool = pool.filter((i) => sonnets[i].autora === true);
+  }
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, Math.min(ROUNDS_PER_GAME, pool.length));
+}
+
+const PACE_LABELS = { casual: "Casual", facil: "Desafio · Fácil", medio: "Desafio · Médio", dificil: "Desafio · Difícil" };
+
+function startGame(mode) {
+  currentMode = MODE_LABELS[mode] ? mode : "geral";
+  order = buildOrder(currentMode);
+  roundTotalEl.textContent = order.length;
+  modeTagEl.textContent = MODE_LABELS[currentMode] + (pace !== "casual" ? " · " + PACE_LABELS[pace] : "");
+  roundIdx = 0;
+  score = 0;
+  scoreEl.textContent = score;
+  document.querySelector(".guess-row").style.display = "flex";
+  giveupBtn.style.display = "block";
+  showView(viewGame);
+  renderRound();
+}
+
+function finalMessageFor(finalScore, roundsPlayed, earlyExit) {
+  if (roundsPlayed <= 0) {
+    return "Partida encerrada antes da primeira rodada ser concluída.";
+  }
+  const maxPossible = roundsPlayed * (mainFieldBase(currentMode) + BONUS_PTS * 2);
+  const ratio = finalScore / maxPossible;
+  let base;
+  if (ratio >= 0.7) base = "Um verdadeiro detetive de sonetos. Caso resolvido com louvor.";
+  else if (ratio >= 0.4) base = "Bom trabalho de investigação — algumas pistas escaparam.";
+  else base = "O arquivo guarda ainda muitos mistérios. Tente outra vez.";
+  return earlyExit ? "Partida encerrada antes do fim. " + base : base;
+}
+
+function endGame(roundsPlayed, earlyExit) {
+  const played = roundsPlayed === undefined ? order.length : roundsPlayed;
+  finalScoreValueEl.textContent = score;
+  finalMsgEl.textContent = finalMessageFor(score, played, !!earlyExit);
+  endContent.classList.remove("hidden");
+  exitContent.classList.add("hidden");
+  showView(viewEnd);
+}
+
+function currentSonnet() {
+  return sonnets[order[roundIdx]];
+}
+
+function currentPoints() {
+  return Math.max(20, mainFieldBase(currentMode) - missCount * 15);
+}
+
+function renderCard(container, key, s, isBonus) {
+  const meta = fieldMeta[key];
+  const st = state[key];
+  const card = document.createElement("div");
+  card.className = "evidence-card" + (isBonus ? " bonus" : "");
+
+  let valueHtml = '<span class="field-value unknown">?</span>';
+  let badgeHtml = "";
+  if (st === "guessed") {
+    valueHtml = '<span class="field-value">' + s[key] + '</span>';
+    badgeHtml = '<div class="badge stamp">CERTO</div>';
+  } else if (st === "hint") {
+    valueHtml = '<span class="field-value">' + s[key] + '</span>';
+    badgeHtml = '<div class="badge hint">pista</div>';
+  } else if (st === "given") {
+    valueHtml = '<span class="field-value">' + s[key] + '</span>';
+    badgeHtml = '<div class="badge given">fixo</div>';
+  }
+
+  card.innerHTML =
+    badgeHtml +
+    '<div class="field-label">' + meta.label + '</div>' +
+    valueHtml;
+  container.appendChild(card);
+}
+
+function renderTargets() {
+  const s = currentSonnet();
+  mainTargetsEl.innerHTML = "";
+  bonusTargetsEl.innerHTML = "";
+  mainKeys.forEach((k) => renderCard(mainTargetsEl, k, s, false));
+  bonusKeys.forEach((k) => renderCard(bonusTargetsEl, k, s, true));
+}
+
+function renderExcerpt() {
+  const s = currentSonnet();
+  const texts = [s.linha1, s.quarteto, s.completo];
+  excerptEl.textContent = texts[Math.min(textStage, texts.length - 1)];
+}
+
+function allFieldsResolved() {
+  return allKeys.every((k) => !!state[k]);
+}
+
+function endRound(reveal) {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  const s = currentSonnet();
+  if (reveal) {
+    allKeys.forEach((k) => { if (!state[k]) state[k] = "hint"; });
+    renderTargets();
+  }
+  excerptEl.textContent = s.completo;
+  input.disabled = true;
+  guessBtn.disabled = true;
+  giveupBtn.disabled = true;
+  nextWrap.style.display = "block";
+}
+
+function updateAttempts() {
+  attemptsCountEl.textContent = Math.min(missCount, MAX_ATTEMPTS);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeRemaining / 60);
+  const sec = timeRemaining % 60;
+  timerValueEl.textContent = m + ":" + String(sec).padStart(2, "0");
+  timerTagEl.classList.toggle("low", timeRemaining <= 10);
+}
+
+function handleTimeout() {
+  feedbackEl.className = "feedback bad";
+  feedbackEl.textContent = "» Tempo esgotado! Caso encerrado — soneto completo revelado.";
+  endRound(true);
+}
+
+function startTimer(seconds) {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  timeRemaining = seconds;
+  timerTagEl.classList.remove("hidden");
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeRemaining--;
+    updateTimerDisplay();
+    if (timeRemaining <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      handleTimeout();
+    }
+  }, 1000);
+}
+
+function renderRound() {
+  missCount = 0;
+  textStage = 0;
+  state = {};
+  if (isPaisPrefilled(currentMode)) {
+    state.pais = "given";
+  }
+  feedbackEl.textContent = "";
+  feedbackEl.className = "feedback";
+  input.value = "";
+  input.disabled = false;
+  guessBtn.disabled = false;
+  giveupBtn.disabled = false;
+  nextWrap.style.display = "none";
+  roundNumEl.textContent = roundIdx + 1;
+  attemptsMaxEl.textContent = MAX_ATTEMPTS;
+  updateAttempts();
+  renderTargets();
+  renderExcerpt();
+  if (pace !== "casual") {
+    startTimer(CHALLENGE_SECONDS[pace]);
+  } else {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerTagEl.classList.add("hidden");
+  }
+  input.focus();
+}
+
+function handleGuess() {
+  const raw = input.value;
+  const guess = normalize(raw);
+  if (!guess) return;
+  const s = currentSonnet();
+  let matchedKey = null;
+  for (const key of allKeys) {
+    if (state[key]) continue;
+    if (matchesAlias(raw, s.aliases[key])) {
+      matchedKey = key;
+      break;
+    }
+  }
+
+  if (matchedKey) {
+    const isBonus = bonusKeys.includes(matchedKey);
+    const pts = isBonus ? BONUS_PTS : currentPoints();
+    score += pts;
+    scoreEl.textContent = score;
+    state[matchedKey] = "guessed";
+    markDiscovered(s.id, matchedKey);
+    renderTargets();
+    feedbackEl.className = "feedback ok";
+    feedbackEl.textContent = "» " + fieldMeta[matchedKey].label + " correto! +" + pts + " pontos" + (isBonus ? " (bônus)." : ".");
+    if (allFieldsResolved()) {
+      feedbackEl.textContent += " Caso encerrado — soneto completo revelado.";
+      endRound(false);
+    }
+  } else {
+    missCount++;
+    textStage = Math.min(2, missCount);
+    const newlyRevealed = [];
+    revealSchedule.forEach((item) => {
+      if (missCount === item.at && !state[item.key]) {
+        state[item.key] = "hint";
+        newlyRevealed.push(item.key);
+      }
+    });
+    renderTargets();
+    renderExcerpt();
+    updateAttempts();
+    feedbackEl.className = "feedback bad";
+    let msg = "» Nenhuma pista aberta bateu. Mais texto revelado.";
+    if (newlyRevealed.length) {
+      const labels = newlyRevealed.map((k) => fieldMeta[k].label).join(", ");
+      msg += " Pista liberada: " + labels + ".";
+    }
+    feedbackEl.textContent = msg;
+    if (allFieldsResolved()) {
+      feedbackEl.textContent += " Caso encerrado — soneto completo revelado.";
+      endRound(false);
+    }
+  }
+  input.value = "";
+}
+
+// ---- Arquivo: grade do catálogo e painel de detalhe do autor -------------
+function computeSonnetStatus(s) {
+  const count = discoveredCountOf(s.id);
+  if (count === 0) return "locked";
+  if (count === allKeys.length) return "complete";
+  return "partial";
+}
+
+function renderArquivoGrid() {
+  arquivoGridEl.innerHTML = "";
+  const sorted = [...sonnets].sort(
+    (a, b) => a.autor.localeCompare(b.autor, "pt-BR") || a.titulo.localeCompare(b.titulo, "pt-BR")
+  );
+  let completeCount = 0;
+  sorted.forEach((s) => {
+    const status = computeSonnetStatus(s);
+    if (status === "complete") completeCount++;
+    const discovered = discoveredFieldsOf(s.id);
+    const count = discoveredCountOf(s.id);
+
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "arquivo-card " + status;
+
+    const statusLabel =
+      status === "locked" ? "não descoberto" :
+      status === "complete" ? "completo" :
+      count + " de " + allKeys.length + " campos";
+    const statusIcon = status === "locked" ? "\u{1F512}" : status === "complete" ? "\u2713" : "\u25CF";
+    const tituloDisplay = discovered.titulo ? s.titulo : "?????";
+    const autorDisplay = discovered.autor ? s.autor : "Autor desconhecido";
+
+    card.innerHTML =
+      '<div class="arquivo-card-status">' + statusIcon + " " + statusLabel + "</div>" +
+      '<div class="arquivo-card-title">' + tituloDisplay + "</div>" +
+      '<div class="arquivo-card-sub">' + autorDisplay + "</div>";
+    card.addEventListener("click", () => showArquivoDetail(s.id));
+    arquivoGridEl.appendChild(card);
+  });
+  arquivoProgressEl.textContent = completeCount + " de " + sonnets.length + " sonetos completos";
+}
+
+function showArquivoDetail(sonnetId) {
+  const s = sonnets.find((x) => x.id === sonnetId);
+  if (!s) return;
+  const d = discoveredFieldsOf(sonnetId);
+  const autorKnown = !!d.autor;
+
+  let html = "";
+
+  if (autorKnown) {
+    const initials = s.autor.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+    html +=
+      '<div class="detail-title-row">' +
+      '<div class="detail-avatar">' + initials + "</div>" +
+      "<div>" +
+      '<p class="detail-name">' + s.autor + "</p>" +
+      '<p class="detail-meta">' + (d.pais ? s.pais : "país ?") + " · " + (d.seculo ? "século " + s.seculo : "século ?") + "</p>" +
+      "</div></div>";
+  } else {
+    html +=
+      '<div class="detail-title-row">' +
+      '<div class="detail-avatar">?</div>' +
+      "<div>" +
+      '<p class="detail-name">Autor ainda não descoberto</p>' +
+      '<p class="detail-meta">Acerte o campo "Autor" numa partida pra desbloquear o perfil.</p>' +
+      "</div></div>";
+  }
+
+  html += '<p class="detail-section-label">Este soneto</p>';
+  html +=
+    '<p style="font-family: var(--font-display); font-style: italic; font-size: 15px; margin: 0 0 14px;">' +
+    (d.titulo ? "\u201C" + s.titulo + "\u201D" : "Título ainda não descoberto") +
+    "</p>";
+
+  html += '<p class="detail-section-label">Sobre o estilo</p>';
+  if (d.corrente) {
+    const info = getCorrenteInfo(s.corrente);
+    html +=
+      '<div class="style-box"><p><strong>' + s.corrente + ".</strong> " + (info ? info.texto : "") + "</p></div>";
+  } else {
+    html += '<div class="style-box locked"><p>Acerte a corrente literária deste soneto pra revelar a explicação de estilo.</p></div>';
+  }
+
+  const anyDiscovered = discoveredCountOf(sonnetId) > 0;
+  html += '<p class="detail-section-label">O soneto completo</p>';
+  if (anyDiscovered) {
+    html +=
+      '<div class="fragment" style="margin-bottom:16px;"><div class="fragment-text">' +
+      escapeHtml(s.completo) +
+      "</div></div>";
+  } else {
+    html += '<div class="style-box locked"><p>Jogue este soneto numa partida pra revelar o texto completo aqui.</p></div>';
+  }
+
+  if (autorKnown) {
+    const outros = sonnets.filter((x) => x.autor === s.autor);
+    html += '<p class="detail-section-label">Sonetos de ' + s.autor + " (" + outros.length + ")</p>";
+    html += '<div class="detail-sonnet-list">';
+    outros.forEach((o) => {
+      const od = discoveredFieldsOf(o.id);
+      const ocount = discoveredCountOf(o.id);
+      const rowClass = ocount === 0 ? "locked-row" : ocount === allKeys.length ? "complete-row" : "partial-row";
+      const icon = ocount === 0 ? "\u{1F512}" : ocount === allKeys.length ? "\u2713" : "\u25CF";
+      const label = od.titulo ? o.titulo : "?????";
+      html +=
+        '<div class="detail-sonnet-row ' + rowClass + '"><span><span class="status-icon">' + icon + "</span>" +
+        label + "</span><span>" + ocount + "/" + allKeys.length + "</span></div>";
+    });
+    html += "</div>";
+  }
+
+  arquivoDetailBodyEl.innerHTML = html;
+  arquivoGridWrap.classList.add("hidden");
+  arquivoDetailEl.classList.remove("hidden");
+}
+
+function backToArquivoGrid() {
+  arquivoDetailEl.classList.add("hidden");
+  arquivoGridWrap.classList.remove("hidden");
+  renderArquivoGrid();
+}
+
+function openArquivo() {
+  if (!discoveryLoaded) loadDiscoveryData();
+  arquivoDetailEl.classList.add("hidden");
+  arquivoGridWrap.classList.remove("hidden");
+  renderArquivoGrid();
+  showView(viewArquivo);
+}
+
+guessBtn.addEventListener("click", handleGuess);
+input.addEventListener("keydown", (e) => { if (e.key === "Enter") handleGuess(); });
+giveupBtn.addEventListener("click", () => endRound(true));
+
+nextBtn.addEventListener("click", () => {
+  roundIdx++;
+  if (roundIdx >= order.length) {
+    endGame();
+    return;
+  }
+  renderRound();
+});
+
+startBtn.addEventListener("click", () => showView(viewModes));
+modeGeralBtn.addEventListener("click", () => { pendingMode = "geral"; showView(viewPace); });
+modeBrasilBtn.addEventListener("click", () => { pendingMode = "brasil"; showView(viewPace); });
+modeClassicosBtn.addEventListener("click", () => { pendingMode = "classicos"; showView(viewPace); });
+modeFemininaBtn.addEventListener("click", () => { pendingMode = "feminina"; showView(viewPace); });
+modesBackBtn.addEventListener("click", () => showView(viewStart));
+paceCasualBtn.addEventListener("click", () => { pace = "casual"; startGame(pendingMode); });
+paceFacilBtn.addEventListener("click", () => { pace = "facil"; startGame(pendingMode); });
+paceMedioBtn.addEventListener("click", () => { pace = "medio"; startGame(pendingMode); });
+paceDificilBtn.addEventListener("click", () => { pace = "dificil"; startGame(pendingMode); });
+paceBackBtn.addEventListener("click", () => showView(viewModes));
+
+quitBtn.addEventListener("click", () => {
+  endGame(roundIdx, true);
+});
+
+playAgainBtn.addEventListener("click", () => startGame(currentMode));
+homeBtn.addEventListener("click", () => showView(viewStart));
+
+exitBtn.addEventListener("click", () => {
+  // Tenta fechar a aba (só funciona se foi aberta via script); caso contrário,
+  // alterna para a mensagem de despedida sem destruir os elementos originais,
+  // para que "Reabrir caso" continue funcionando normalmente depois.
+  window.close();
+  endContent.classList.add("hidden");
+  exitContent.classList.remove("hidden");
+});
+
+reopenBtn.addEventListener("click", () => {
+  endContent.classList.remove("hidden");
+  exitContent.classList.add("hidden");
+  showView(viewStart);
+});
+
+arquivoBtn.addEventListener("click", openArquivo);
+arquivoBackBtn.addEventListener("click", () => showView(viewStart));
+arquivoDetailBackBtn.addEventListener("click", backToArquivoGrid);
+
+tutorialBtn.addEventListener("click", openTutorial);
+tutorialSkipBtn.addEventListener("click", finishTutorial);
+tutorialBackBtn.addEventListener("click", () => {
+  if (tutorialStep > 0) {
+    tutorialStep--;
+    renderTutorialStep();
+  }
+});
+tutorialNextBtn.addEventListener("click", () => {
+  const total = tutorialSteps().length;
+  if (tutorialStep < total - 1) {
+    tutorialStep++;
+    renderTutorialStep();
+  } else {
+    finishTutorial();
+  }
+});
+
+loadDiscoveryData();
+if (hasTutorialBeenSeen()) {
+  showView(viewStart);
+} else {
+  openTutorial();
+}
+</script>
+</body>
+</html>
